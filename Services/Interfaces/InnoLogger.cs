@@ -20,7 +20,7 @@ namespace InnoTasker.Services.Interfaces
         public InnoLogger()
         {
             NewLogFile();
-            logTimer = new Timer(NewLogFile, null, DateTime.Today.AddHours(24).TimeOfDay, TimeSpan.FromHours(24));
+            logTimer = new Timer(NewLogFile, null, DateTime.Today.AddDays(23).AddHours(59).AddSeconds(59).TimeOfDay, TimeSpan.FromHours(24));
         }
 
         public void Log(LogMessage message) 
@@ -52,7 +52,7 @@ namespace InnoTasker.Services.Interfaces
                 Shutdown(false);
             }
 
-            string logName = $"{DateTime.Now.ToString("dd-MM-yyyy--T")}.log";
+            string logName = $"{DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")}.log";
             string logPath = Directory.GetCurrentDirectory() + "\\Logs\\";
             if (!Directory.Exists(logPath)) Directory.CreateDirectory(logPath);
             logPath += logName;

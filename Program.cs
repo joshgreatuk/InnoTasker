@@ -46,7 +46,7 @@ namespace InnoTasker
 
         public async Task MainAsync()
         {
-            _logger.LogAsync(LogSeverity.Info, this, "Initializing InnoTasker");
+            await _logger.LogAsync(LogSeverity.Info, this, "Initializing InnoTasker");
             InteractionHandler interactionHandler = _services.GetRequiredService<InteractionHandler>(); //Initialize to setup ready event
 
             DiscordSocketClient client = _services.GetRequiredService<DiscordSocketClient>();
