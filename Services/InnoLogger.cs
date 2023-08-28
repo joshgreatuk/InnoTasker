@@ -46,7 +46,7 @@ namespace InnoTasker.Services
             if (dispose) logTimer.Dispose();
         }
 
-        public void NewLogFile(object? sender = null)
+        public async void NewLogFile(object? sender = null)
         {
             if (logStream != null || streamWriter != null)
             {
@@ -61,7 +61,7 @@ namespace InnoTasker.Services
             streamWriter = new StreamWriter(logStream);
             streamWriter.AutoFlush = true;
 
-            Log(LogSeverity.Info, this, "Log opened! Hi :D");
+            await LogAsync(LogSeverity.Info, this, "Log opened! Hi :D");
         }
     }
 }
