@@ -33,13 +33,12 @@ namespace InnoTasker
         {
             DiscordSocketConfig discordSocketConfig = new()
             {
-
+                GatewayIntents = GatewayIntents.None
             };
 
             return new ServiceCollection()
                 .AddSingleton<ILogger, InnoLogger>()
-                .AddSingleton<DiscordSocketConfig>()
-                .AddSingleton<DiscordSocketClient>()
+                .AddSingleton(new DiscordSocketClient(discordSocketConfig))
                 .AddSingleton<InteractionService>()
                 .AddSingleton<InteractionHandler>()
                 .BuildServiceProvider();
@@ -53,8 +52,7 @@ namespace InnoTasker
             DiscordSocketClient client = _services.GetRequiredService<DiscordSocketClient>();
             client.Log += _logger.LogAsync;
 
-
-            await client.LoginAsync(Discord.TokenType.Bot, IsDebug() ? s_debugBotToken : s_releaseBotToken);
+            await client.LoginAsync(TokenType.Bot, IsDebug() ? s_debugBotToken : s_releaseBotToken);
             await client.StartAsync();
 
             await Task.Delay(-1);
