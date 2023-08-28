@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using InnoTasker.Services;
 using InnoTasker.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using System;
