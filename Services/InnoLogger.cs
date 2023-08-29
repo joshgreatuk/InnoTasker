@@ -3,7 +3,6 @@ using InnoTasker.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,6 +17,7 @@ namespace InnoTasker.Services
 
         public Timer logTimer;
 
+        private Dictionary<Type, string> senderCache = new();
         public InnoLogger()
         {
             NewLogFile();
@@ -27,10 +27,10 @@ namespace InnoTasker.Services
         public void Log(LogMessage message)
         { Task.Run(() => LogAsync(message)); }
         public void Log(LogSeverity severity, object sender, string message, Exception? ex = null)
-        { Log(new LogMessage(severity, sender.GetType().Name, message, ex)); }
+        { Log(new LogMessage(severity, SenderToString(sender), message, ex)); }
 
         public async Task LogAsync(LogSeverity severity, object sender, string message, Exception? ex = null)
-        { await LogAsync(new LogMessage(severity, sender.GetType().Name, message, ex)); }
+        { await LogAsync(new LogMessage(severity, SenderToString(sender), message, ex)); }
         public async Task LogAsync(LogMessage message)
         {
             //Log to file and console
@@ -62,6 +62,24 @@ namespace InnoTasker.Services
             streamWriter.AutoFlush = true;
 
             await LogAsync(LogSeverity.Info, this, "Log opened! Hi :D");
+        }
+
+        public string SenderToString(object sender)
+        {
+            Type senderType = sender.GetType();
+            if (senderCache.TryGetValue(senderType, out string senderString)) return senderString;
+
+            if (!senderType.IsGenericType)
+            {
+                senderString = senderType.Name;
+            }
+            else
+            {
+                senderString = senderType.Name + $"<{String.Join(", ", senderType.GetGenericArguments().Select(x => x.Name))}>";
+            }
+
+            senderCache.Add(senderType, senderString);
+            return senderString;
         }
     }
 }
