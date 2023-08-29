@@ -3,7 +3,9 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using InnoTasker.Data.Databases;
 using InnoTasker.Services;
+using InnoTasker.Services.ToDo;
 using InnoTasker.Services.Interfaces;
+using InnoTasker.Services.Interfaces.ToDo;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
@@ -62,7 +64,11 @@ namespace InnoTasker
                 .AddSingleton(x => new UserEmojiDatabase(x, $"{basePath}\\Data\\UserEmojis\\"))
 
                 //Bot Services
-                .AddSingleton<IGuildService>()
+                .AddSingleton<IGuildService, GuildService>()
+                .AddSingleton<IToDoListService, ToDoListService>()
+                .AddSingleton<IToDoForumService, ToDoForumService>()
+                .AddSingleton<IToDoSettingsService, ToDoSettingsService>()
+                .AddSingleton<IToDoUpdateService, ToDoUpdateService>()
 
                 .BuildServiceProvider();
         }
@@ -78,18 +84,24 @@ namespace InnoTasker
             await client.LoginAsync(TokenType.Bot, IsDebug() ? s_debugBotToken : s_releaseBotToken);
             await client.StartAsync();
 
+            await _services.GetRequiredService<IToDoListService>().InitService();
+            await _services.GetRequiredService<IToDoForumService>().InitService();
+
+            await _logger.LogAsync(LogSeverity.Info, this, $"InnoTasker Initialized! :)");
+
             await Task.Delay(-1);
         }
 
         public void ExitSafely(object? sender, EventArgs eventArgs)
         {
+            _logger.LogAsync(LogSeverity.Info, this, "Bot shutdown started");
+
             //Save anything that needs saving, etc
             List<IDatabase> toSave = new()
             {
                 _services.GetRequiredService<GuildDatabase>(),
                 _services.GetRequiredService<UserEmojiDatabase>()
             };
-
             foreach (IDatabase database in toSave) database.Save();
 
             _logger.LogAsync(LogSeverity.Info, this, "InnoTasker has shutdown successfully <3");

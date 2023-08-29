@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Services.ToDo
 {
-    public class ToDoForumService : IToDoForumService
+    public class ToDoForumService : InnoServiceBase, IToDoForumService
     {
         private readonly IGuildService _guildService;
 
-        public ToDoForumService(IGuildService guildService)
+        public ToDoForumService(ILogger logger, IGuildService guildService) : base(logger)
         {
             _guildService = guildService;
         }
@@ -20,6 +20,11 @@ namespace InnoTasker.Services.ToDo
         public bool IsListForumEnabled(ulong guildID, string listName)
         {
             return _guildService.GetToDoList(guildID, listName).ForumChannelID != null;
+        }
+
+        public async Task InitService()
+        {
+            //Update forum messages
         }
     }
 }

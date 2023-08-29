@@ -46,6 +46,7 @@ namespace InnoTasker
             {
                 await _interactionService.AddCommandsGloballyAsync(true);
             }
+            await _logger.LogAsync(LogSeverity.Info, this, $"InteractionHandler Initialized!");
         }
 
         public async Task OnInteraction(SocketInteraction interaction)

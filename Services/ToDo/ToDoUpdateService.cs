@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Services.ToDo
 {
-    public class ToDoUpdateService : IToDoUpdateService
+    public class ToDoUpdateService : InnoServiceBase, IToDoUpdateService
     {
         private readonly IGuildService _guildService;
         private readonly IToDoListService _toDoListService;
         private readonly IToDoForumService _toDoForumService;
 
-        public ToDoUpdateService(IGuildService guildService, IToDoListService toDoListService, IToDoForumService toDoForumService)
+        public ToDoUpdateService(ILogger logger, IGuildService guildService, IToDoListService toDoListService, IToDoForumService toDoForumService) : base(logger)
         {
             _guildService = guildService;
             _toDoListService = toDoListService;

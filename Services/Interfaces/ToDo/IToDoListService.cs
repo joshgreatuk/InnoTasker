@@ -8,6 +8,6 @@ namespace InnoTasker.Services.Interfaces.ToDo
 {
     public interface IToDoListService
     {
-
+        public Task InitService();
     }
 }

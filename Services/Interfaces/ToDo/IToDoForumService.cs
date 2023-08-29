@@ -9,5 +9,7 @@ namespace InnoTasker.Services.Interfaces.ToDo
     public interface IToDoForumService
     {
         public bool IsListForumEnabled(ulong guildID, string listName);
+
+        public Task InitService();
     }
 }

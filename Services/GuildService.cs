@@ -12,15 +12,12 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Services
 {
-    public class GuildService : IGuildService
+    public class GuildService : InnoServiceBase, IGuildService
     {
-        private readonly ILogger _logger;
         private readonly GuildDatabase _guildDatabase;
-        
 
-        public GuildService(ILogger logger, GuildDatabase data, DiscordSocketClient client)
+        public GuildService(ILogger logger, GuildDatabase data, DiscordSocketClient client) : base(logger)
         {
-            _logger = logger;
             _guildDatabase = data;
 
             client.JoinedGuild += OnGuildJoin;
