@@ -29,7 +29,7 @@ namespace InnoTasker.Data.Databases
             foreach (string file in Directory.GetFiles(path, "*.json"))
             {
                 string rawJson = File.ReadAllText(file);
-                string fileName = file.Split("/").Last().Split('.').First();
+                string fileName = file.Split("\\").Last().Split('.').First();
                 try
                 {
                     TKey key = (TKey)Convert.ChangeType(fileName, typeof(TKey));
