@@ -44,7 +44,7 @@ namespace InnoTasker.Services
 
         public void Shutdown(bool dispose = true)
         {
-            Log(LogSeverity.Info, this, "Log closed. Bye bye.");
+            LogAsync(LogSeverity.Info, this, "Log closed. Bye bye.");
             streamWriter.Close();
             logStream.Close();
             if (dispose) logTimer.Dispose();

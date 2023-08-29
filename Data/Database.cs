@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Data
 {
-    public class Database<TKey, TValue> : Dictionary<TKey, TValue> where TKey : notnull
+    public abstract class Database<TKey, TValue> : Dictionary<TKey, TValue>, IDatabase where TKey : notnull
     {
         private readonly ILogger _logger;
 
@@ -41,6 +41,8 @@ namespace InnoTasker.Data
                     _logger.Log(LogSeverity.Error, this, $"Error loading file '{fileName}', file skipped", ex);
                 }
             }
+
+            _logger.Log(LogSeverity.Info, this, $"Database initialized");
         }
 
         public new void Add(TKey key, TValue value)
@@ -81,7 +83,7 @@ namespace InnoTasker.Data
             {
                 TValue value = this[key];
                 string path = $"{Path}{key}.json";
-                string valueJson = JsonConvert.SerializeObject(value);
+                string valueJson = JsonConvert.SerializeObject(value, Formatting.Indented);
                 File.WriteAllText(path, valueJson);
             }
             catch (Exception ex)

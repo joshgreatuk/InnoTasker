@@ -37,11 +37,33 @@ namespace InnoTasker
                 GatewayIntents = GatewayIntents.None
             };
 
+            string basePath = $"{Directory.GetCurrentDirectory()}\\";
+            string[] dataDirs = new string[]
+            {
+                "Data\\",
+                "Data\\GuildData\\",
+                "Data\\UserEmojis\\"
+            };
+
+            foreach (string dir in dataDirs)
+            {
+                if (!Directory.Exists(basePath + dir)) Directory.CreateDirectory(basePath + dir);
+            }
+
             return new ServiceCollection()
+                //Base Services
                 .AddSingleton<ILogger, InnoLogger>()
                 .AddSingleton(new DiscordSocketClient(discordSocketConfig))
                 .AddSingleton<InteractionService>()
                 .AddSingleton<InteractionHandler>()
+
+                //Databases
+                .AddSingleton(x => new GuildDatabase(x, $"{basePath}\\Data\\GuildData\\"))
+                .AddSingleton(x => new UserEmojiDatabase(x, $"{basePath}\\Data\\UserEmojis\\"))
+
+                //Bot Services
+
+
                 .BuildServiceProvider();
         }
 
@@ -62,7 +84,15 @@ namespace InnoTasker
         public void ExitSafely(object? sender, EventArgs eventArgs)
         {
             //Save anything that needs saving, etc
-            _logger.Log(LogSeverity.Info, this, "InnoTasker has shutdown successfully <3");
+            List<IDatabase> toSave = new()
+            {
+                _services.GetRequiredService<GuildDatabase>(),
+                _services.GetRequiredService<UserEmojiDatabase>()
+            };
+
+            foreach (IDatabase database in toSave) database.Save();
+
+            _logger.LogAsync(LogSeverity.Info, this, "InnoTasker has shutdown successfully <3");
             _logger.Shutdown();
         }
 
