@@ -1,7 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using InnoTasker.Data;
+using InnoTasker.Data.Databases;
 using InnoTasker.Services;
 using InnoTasker.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,7 +62,7 @@ namespace InnoTasker
                 .AddSingleton(x => new UserEmojiDatabase(x, $"{basePath}\\Data\\UserEmojis\\"))
 
                 //Bot Services
-
+                .AddSingleton<IGuildService>()
 
                 .BuildServiceProvider();
         }

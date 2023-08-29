@@ -17,6 +17,8 @@ namespace InnoTasker.Data.ToDo
         public List<string> Stages { get; set; } = new();
 
         public ulong MessageID { get; set; } = new();
-        public List<ToDoList> Items { get; set; } = new();
+        public List<ToDoItem> Items { get; set; } = new();
+
+        public ToDoItem GetToDoItem(string itemName) => Items.FirstOrDefault(x => x.Name == itemName);
     }
 }

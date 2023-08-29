@@ -17,7 +17,10 @@ namespace InnoTasker.Data.ToDo
         public bool IsComplete { get; set; } = false;
 
         public List<ulong> AssignedUsers { get; set; } = new();
+
         public ulong? ForumPostID { get; set; }
+        public ulong? ForumMessageID { get; set; }
+
         public string? CachedToDoEntry { get; set; }
         //Custom fields
     }
