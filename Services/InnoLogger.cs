@@ -10,14 +10,16 @@ namespace InnoTasker.Services
 {
     public class InnoLogger : ILogger
     {
+        private static readonly bool s_logDebug = true;
         private static readonly int s_padSource = 20;
 
-        public FileStream logStream;
-        public StreamWriter streamWriter;
+        public FileStream? logStream;
+        public StreamWriter? streamWriter;
 
         public Timer logTimer;
 
         private Dictionary<Type, string> senderCache = new();
+
         public InnoLogger()
         {
             NewLogFile();
@@ -33,6 +35,8 @@ namespace InnoTasker.Services
         { await LogAsync(new LogMessage(severity, SenderToString(sender), message, ex)); }
         public async Task LogAsync(LogMessage message)
         {
+            if (message.Severity is LogSeverity.Debug or LogSeverity.Verbose && !s_logDebug) return;
+
             //Log to file and console
             Console.WriteLine(message.ToString(padSource: s_padSource));
             if (streamWriter != null) streamWriter.WriteLine(message.ToString(padSource: s_padSource));
@@ -58,7 +62,7 @@ namespace InnoTasker.Services
             if (!Directory.Exists(logPath)) Directory.CreateDirectory(logPath);
             logPath += logName;
             logStream = File.OpenWrite(logPath);
-            streamWriter = new StreamWriter(logStream);
+            streamWriter = new(logStream);
             streamWriter.AutoFlush = true;
 
             await LogAsync(LogSeverity.Info, this, "Log opened! Hi :D");
