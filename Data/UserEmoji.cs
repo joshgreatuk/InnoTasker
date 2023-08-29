@@ -11,11 +11,5 @@ namespace InnoTasker.Data
     {
         public Emoji Emoji { get; set; }
         public string Path { get; set; }
-
-        public UserEmoji(Emoji emoji, string path)
-        {
-            Emoji = emoji;
-            Path = path;
-        }
     }
 }

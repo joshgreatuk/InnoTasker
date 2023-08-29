@@ -11,11 +11,13 @@ namespace InnoTasker.Data.ToDo
         public string Name { get; set; }
         public string Description { get; set; }
 
-        public string Category { get; set; }
-        public string Stage { get; set; }
+        public List<string> Categories { get; set; } = new();
+        public List<string> Stages { get; set; } = new();
 
-        public List<ulong> AssignedUsers { get; set; }
-        public ulong ForumPostID { get; set; }
+        public bool IsComplete { get; set; } = false;
+
+        public List<ulong> AssignedUsers { get; set; } = new();
+        public ulong? ForumPostID { get; set; }
         public string? CachedToDoEntry { get; set; }
         //Custom fields
     }

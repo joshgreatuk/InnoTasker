@@ -13,15 +13,10 @@ namespace InnoTasker.Data.ToDo
         public ulong CommandChannelID { get; set; }
         public ulong? ForumChannelID { get; set; }
 
-        public bool IsComplete { get; set; }
-
         public List<string> Categories { get; set; } = new();
         public List<string> Stages { get; set; } = new();
 
         public ulong MessageID { get; set; } = new();
         public List<ToDoList> Items { get; set; } = new();
-
-        public Dictionary<ulong, UserEmoji> UserEmojis { get; set; } = new();
-
     }
 }
