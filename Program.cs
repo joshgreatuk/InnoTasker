@@ -104,6 +104,8 @@ namespace InnoTasker
             };
             foreach (IDatabase database in toSave) database.Save();
 
+            _services.GetRequiredService<IToDoSettingsService>().Shutdown();
+
             _logger.LogAsync(LogSeverity.Info, this, "InnoTasker has shutdown successfully <3");
             _logger.Shutdown();
         }
