@@ -11,7 +11,7 @@ namespace InnoTasker.Services.Interfaces.ToDo
 {
     public interface IToDoSettingsService
     { 
-        public MessageContext GetToDoListPage();
+        public MessageContext GetToDoListPage(ulong interactionID);
 
         public MessageContext GetLastSettingsPage(ulong interactionID);
         public MessageContext GetSettingsPage(ulong interactionID, int index);
