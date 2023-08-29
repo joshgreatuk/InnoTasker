@@ -19,6 +19,8 @@ namespace InnoTasker.Data.ToDo
         public ulong MessageID { get; set; } = new();
         public List<ToDoItem> Items { get; set; } = new();
 
+        public Dictionary<ulong, ListUserPermissions> UserPermissions { get; set; } = new();
+
         public ToDoItem GetToDoItem(string itemName) => Items.FirstOrDefault(x => x.Name == itemName);
     }
 }
