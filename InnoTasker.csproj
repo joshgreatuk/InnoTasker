@@ -17,9 +17,4 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Modules\Autocomplete\" />
-    <Folder Include="Modules\Preconditions\" />
-  </ItemGroup>
-
 </Project>
