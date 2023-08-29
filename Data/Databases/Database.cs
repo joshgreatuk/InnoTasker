@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InnoTasker.Data
+namespace InnoTasker.Data.Databases
 {
     public abstract class Database<TKey, TValue> : Dictionary<TKey, TValue>, IDatabase where TKey : notnull
     {
@@ -72,9 +72,9 @@ namespace InnoTasker.Data
             int failCount = 0;
             foreach (TKey key in Keys)
             {
-                if (!Save(key)) failCount++; 
+                if (!Save(key)) failCount++;
             }
-            _logger.Log(LogSeverity.Info, this, $"Successfully saved {Keys.Count-failCount} entries with {failCount} failures");
+            _logger.Log(LogSeverity.Info, this, $"Successfully saved {Keys.Count - failCount} entries with {failCount} failures");
         }
 
         public bool Save(TKey key)
