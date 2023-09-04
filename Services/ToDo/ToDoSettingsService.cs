@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.WebSocket;
 using InnoTasker.Data;
 using InnoTasker.Modules.Settings;
 using InnoTasker.Services.Interfaces;
@@ -14,6 +15,7 @@ namespace InnoTasker.Services.ToDo
 {
     public class ToDoSettingsService : InnoServiceBase, IToDoSettingsService
     {
+        private readonly DiscordSocketClient _client;
         private readonly IGuildService _guildService;
         private readonly IToDoListService _toDoListService;
 
@@ -21,8 +23,9 @@ namespace InnoTasker.Services.ToDo
         public List<ISettingsPageBuilder> settingsPages;
         public List<ToDoSettingsInstance> toDoSettingsInstances = new();
 
-        public ToDoSettingsService(ILogger logger, IGuildService guildService, IToDoListService toDoListService) : base(logger)
+        public ToDoSettingsService(ILogger logger, DiscordSocketClient client, IGuildService guildService, IToDoListService toDoListService) : base(logger)
         {
+            _client = client;
             _guildService = guildService;
             _toDoListService = toDoListService;
 
@@ -37,7 +40,9 @@ namespace InnoTasker.Services.ToDo
         public MessageContext GetToDoListPage(ulong interactionID) //Settings page should replace this menu, so should create an instance?
         {
             ToDoSettingsInstance instance = GetSettingsInstance(interactionID);
-            return toDoListMenuBuilder.BuildPage();
+            MessageContext page = toDoListMenuBuilder.BuildPage();
+            page.component.WithButton("Close", "todolistmenu-close", ButtonStyle.Danger);
+            return page;
         }
 
         public MessageContext GetSettingsPage(ulong interactionID, int index)
@@ -52,9 +57,9 @@ namespace InnoTasker.Services.ToDo
             //Add back, close and forward buttons before sending
             ISettingsPageBuilder builder = settingsPages[instance.pageIndex];
             MessageContext page = builder.BuildPage();
-            page.component.WithButton("<-", "settings-last")
+            page.component.WithButton("<-", "settings-last", ButtonStyle.Secondary)
                 .WithButton("Close", "settings-close", ButtonStyle.Danger)
-                .WithButton("->", "settings-next");
+                .WithButton("->", "settings-next", ButtonStyle.Secondary);
             return page;
         }
 
@@ -86,9 +91,33 @@ namespace InnoTasker.Services.ToDo
         }
 
         public void Shutdown() 
-        { 
+        {
             //Close all settings instances and leave a message saying sorry :P
+            foreach (ToDoSettingsInstance instance in toDoSettingsInstances.ToList())
+            {
+                CloseInstance(instance, "Closed for bot shutdown. Sorry for the inconvenience <3");
+            }
+            toDoSettingsInstances.Clear();
+            _logger.LogAsync(LogSeverity.Info, this, $"All ToDoSettingsInstances closed");
+        }
 
+        public void CloseInstance(ulong interactionID) => CloseInstance(GetSettingsInstance(interactionID));
+
+        public void CloseInstance(ToDoSettingsInstance instance, string? message=null)
+        {
+            if (message != null)
+            {
+                //Instead of removing instance message, replace it with a sorry message
+                if (instance.responseID != null)
+                {
+
+                }
+            }
+
+            //Remove the instance message
+
+
+            toDoSettingsInstances.Remove(instance);
         }
     }
 }
