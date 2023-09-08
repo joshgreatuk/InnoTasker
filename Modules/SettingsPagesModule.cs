@@ -24,7 +24,7 @@ namespace InnoTasker.Modules
         public async Task NextPageInteraction()
         {
             MessageContext message = await _settingsService.GetNextSettingsPage(Context.Channel.Id);
-            await _settingsService.UpdateInstance(Context.Channel.Id, message);
+            await _settingsService.UpdateInstance(Context.Interaction, message);
             await RespondAsync(ephemeral: true);
         }
 
@@ -39,7 +39,7 @@ namespace InnoTasker.Modules
         public async Task LastPageInteraction()
         {
             MessageContext message = await _settingsService.GetLastSettingsPage(Context.Channel.Id);
-            await _settingsService.UpdateInstance(Context.Channel.Id, message);
+            await _settingsService.UpdateInstance(Context.Interaction, message);
             await RespondAsync(ephemeral:true);
         }
 

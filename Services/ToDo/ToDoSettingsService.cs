@@ -15,17 +15,15 @@ namespace InnoTasker.Services.ToDo
 {
     public class ToDoSettingsService : InnoServiceBase, IToDoSettingsService
     {
-        private readonly DiscordSocketClient _client;
         private readonly IGuildService _guildService;
         private readonly IToDoListService _toDoListService;
 
-        ISettingsPageBuilder toDoListMenuBuilder;
-        public List<ISettingsPageBuilder> settingsPages;
-        public List<ToDoSettingsInstance> toDoSettingsInstances = new();
+        private readonly ISettingsPageBuilder toDoListMenuBuilder;
+        private readonly List<ISettingsPageBuilder> settingsPages;
+        private List<ToDoSettingsInstance> toDoSettingsInstances = new();
 
-        public ToDoSettingsService(ILogger logger, DiscordSocketClient client, IGuildService guildService, IToDoListService toDoListService) : base(logger)
+        public ToDoSettingsService(ILogger logger, IGuildService guildService, IToDoListService toDoListService) : base(logger)
         {
-            _client = client;
             _guildService = guildService;
             _toDoListService = toDoListService;
 
@@ -50,7 +48,7 @@ namespace InnoTasker.Services.ToDo
 
                 if (instance.message != null)
                 {
-                    await UpdateInstance(interaction.Channel.Id, message);   
+                    await UpdateInstance(interaction, message);   
                 }
                 else
                 {
@@ -67,12 +65,13 @@ namespace InnoTasker.Services.ToDo
             return true;
         }
 
-        public async Task<bool> OpenSettings(SocketInteraction interaction, string toDoListName)
+        public async Task<bool> OpenSettings(SocketInteraction interaction, string toDoListName, ToDoSettingsContext context)
         {
             ToDoSettingsInstance instance = await GetSettingsInstance(interaction.Channel.Id);
             try
             {
                 instance.guildID = (ulong)interaction.GuildId;
+                instance.context = context;
                 instance.pageIndex = 0;
                 instance.toDoListName = toDoListName;
                 instance.mode = ToDoSettingsInstanceMode.ToDoSettings;
@@ -81,7 +80,7 @@ namespace InnoTasker.Services.ToDo
 
                 if (instance.message != null)
                 {
-                    await UpdateInstance(instance.interactionID, message);
+                    await UpdateInstance(interaction, message);
                 }
                 else
                 {
@@ -110,10 +109,12 @@ namespace InnoTasker.Services.ToDo
             ISettingsPageBuilder builder = settingsPages[instance.pageIndex];
             MessageContext page = await builder.BuildPage(instance);
             page.component.WithButton("<-", "settings-last", ButtonStyle.Secondary)
-                .WithButton("Close", "settings-close", ButtonStyle.Danger)
-                .WithButton("->", "settings-next", ButtonStyle.Secondary);
+                .WithButton("Save & Close", "settings-close", ButtonStyle.Danger, 
+                    disabled:instance.context is ToDoSettingsContext.New && !await settingsPages.Last().CanProceed(instance))
+                .WithButton("->", "settings-next", ButtonStyle.Secondary, disabled: !await settingsPages[instance.pageIndex].CanProceed(instance));
             return page;
         }
+        public async Task<MessageContext> GetCurrentSettingsPage(ulong interactionID) => await GetSettingsPage(await GetSettingsInstance(interactionID));
 
         public async Task<MessageContext> GetNextSettingsPage(ulong interactionID)
         {
@@ -162,14 +163,28 @@ namespace InnoTasker.Services.ToDo
 
             if (message != null)
             {
-                await UpdateInstance(interaction.Channel.Id, (MessageContext)message);
+                await UpdateInstance(interaction, (MessageContext)message);
             }
         }
 
-        public async Task<bool> UpdateInstance(ulong interactionID, MessageContext context)
+        public async Task<bool> UpdateInstance(SocketInteraction interaction, MessageContext context)
         {
-            return false;
+            try
+            {
+                await interaction.Channel.SendMessageAsync(embed: context.embed, components: context.component.Build());
+            }
+            catch (Exception ex)
+            {
+                await _logger.LogAsync(LogSeverity.Error, this, $"Failed to update instance {interaction.Channel.Id}", ex);
+                await CloseInstance(interaction.Channel.Id, "There was an error updating this instance");
+                return false;
+            }
+            return true;
         }
+
+        public async Task<bool> InstanceExists(ulong instanceID) => toDoSettingsInstances.Exists(x => x.interactionID == instanceID);
+
+        public async Task<string> GetCurrentInstanceListName(ulong instanceID) => GetSettingsInstance(instanceID).Result.toDoListName;
 
         public async void Shutdown() 
         {
@@ -182,7 +197,7 @@ namespace InnoTasker.Services.ToDo
             await _logger.LogAsync(LogSeverity.Info, this, $"All ToDoSettingsInstances closed");
         }
 
-        public async Task CloseInstance(ulong interactionID) => CloseInstance(await GetSettingsInstance(interactionID));
+        public async Task CloseInstance(ulong interactionID, string? message=null) => await CloseInstance(await GetSettingsInstance(interactionID), message);
 
         public async Task CloseInstance(ToDoSettingsInstance instance, string? message=null)
         {
@@ -191,6 +206,7 @@ namespace InnoTasker.Services.ToDo
                 //Instead of removing instance message, replace it with a sorry message
                 EmbedBuilder newEmbed = new EmbedBuilder().WithTitle("Sorry!")
                     .WithDescription(message);
+                await instance.message.ModifyAsync(x => x.Embed = newEmbed.Build());
                 await _logger.LogAsync(LogSeverity.Debug, this, $"Closed instance {instance.interactionID} with message specified");
             }
             else if (instance.message != null)
@@ -198,7 +214,7 @@ namespace InnoTasker.Services.ToDo
                 await instance.message.DeleteAsync();
                 await _logger.LogAsync(LogSeverity.Debug, this, $"Closed settings instance {instance.interactionID}");
             }
-            _guildService.SaveGuild(instance.guildID);
+            await _guildService.SaveGuild(instance.guildID);
 
             toDoSettingsInstances.Remove(instance);
         }

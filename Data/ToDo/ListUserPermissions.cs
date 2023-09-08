@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Data.ToDo
 {
-    [Flags]
     public enum ListUserPermissions
     {
         None = 0,

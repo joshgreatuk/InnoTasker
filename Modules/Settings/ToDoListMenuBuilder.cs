@@ -25,18 +25,19 @@ namespace InnoTasker.Modules.Settings
 
         public async Task<MessageContext> BuildPage(ToDoSettingsInstance instance)
         {
-            GuildData guild = _guildService.GetGuildData(instance.guildID);
+            GuildData guild = await _guildService.GetGuildData(instance.guildID);
             List<string> toDoListEntries = guild.Lists.Select(x => x.Name).ToList();
             string toDoListDescription = String.Join('\n', toDoListEntries);
             if (instance.toDoListName == String.Empty &&  toDoListEntries.Count > 0) instance.toDoListName = toDoListEntries[0];
             EmbedBuilder embed = new EmbedBuilder().WithTitle("To-Do List Menu")
-                .WithFields(new[] { new EmbedFieldBuilder().WithName($"To-Do Lists:").WithValue(toDoListDescription) });
+                .WithFields(new[] { new EmbedFieldBuilder().WithName($"To-Do Lists:").WithValue(toDoListDescription) })
+                .WithFooter("You can add a new list with /admin NewToDoList or remove one with /admin DeleteToDoList");
             ComponentBuilder component = new ComponentBuilder()
                 .WithSelectMenu(new SelectMenuBuilder()
                     .WithCustomId("settings-comp-listselect")
                     .WithOptions(toDoListEntries.Select(x => new SelectMenuOptionBuilder()
                         .WithValue(x).WithDefault(x == instance.toDoListName)).ToList()))
-                .WithButton("Settings", "settings-comp-listsettingsbutton", disabled:instance.toDoListName == String.Empty);
+                .WithButton("Settings", "settings-comp-listsettingsbutton", disabled: instance.toDoListName == String.Empty);
             return new MessageContext(embed.Build(), component);
         }
 
@@ -69,7 +70,7 @@ namespace InnoTasker.Modules.Settings
 
         public async Task HandleSettingsButton(ToDoSettingsInstance instance, SocketInteraction interaction)
         {
-            await _settingsService.OpenSettings(interaction, instance.toDoListName);
+            await _settingsService.OpenSettings(interaction, instance.toDoListName, ToDoSettingsContext.Existing);
         }
     }
 }

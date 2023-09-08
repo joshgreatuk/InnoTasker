@@ -74,24 +74,24 @@ namespace InnoTasker.Services
             await _logger.LogAsync(LogSeverity.Debug, this, $"Left guild '{guildID}'");
         }
 
-        public GuildData GetGuildData(ulong guildID)
+        public async Task<GuildData> GetGuildData(ulong guildID)
         {
             return _guildDatabase[guildID];
         }
 
-        public ToDoList GetToDoList(ulong guildID, string listName)
+        public async Task<ToDoList> GetToDoList(ulong guildID, string listName)
         {
-            return GetGuildData(guildID).GetToDoList(listName);
+            return await GetGuildData(guildID).Result.GetToDoList(listName);
         }
 
-        public ToDoList? GetToDoListFromChannel(ulong guildID, ulong channelID)
+        public async Task<ToDoList?> GetToDoListFromChannel(ulong guildID, ulong channelID)
         {
-            return GetGuildData(guildID).Lists.FirstOrDefault(x => x.ListChannelID == channelID 
+            return GetGuildData(guildID).Result.Lists.FirstOrDefault(x => x.ListChannelID == channelID 
                 || x.CommandChannelID == channelID 
                 || x.ForumChannelID == channelID);
         }
 
-        public void SaveGuild(ulong guildID)
+        public async Task SaveGuild(ulong guildID)
         {
             _guildDatabase.Save(guildID);
         }

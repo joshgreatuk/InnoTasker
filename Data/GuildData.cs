@@ -23,6 +23,6 @@ namespace InnoTasker.Data
             ID = iD;
         }
 
-        public ToDoList GetToDoList(string listName) => Lists.FirstOrDefault(x => x.Name == listName);
+        public async Task<ToDoList> GetToDoList(string listName) => Lists.FirstOrDefault(x => x.Name == listName);
     }
 }

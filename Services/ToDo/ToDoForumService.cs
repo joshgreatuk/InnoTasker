@@ -19,7 +19,7 @@ namespace InnoTasker.Services.ToDo
 
         public bool IsListForumEnabled(ulong guildID, string listName)
         {
-            return _guildService.GetToDoList(guildID, listName).ForumChannelID != null;
+            return _guildService.GetToDoList(guildID, listName).Result.ForumChannelID != null;
         }
 
         public async Task InitService()

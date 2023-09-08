@@ -13,17 +13,22 @@ namespace InnoTasker.Services.Interfaces.ToDo
     public interface IToDoSettingsService
     { 
         public Task<bool> OpenToDoListPage(SocketInteraction interaction);
-        public Task<bool> OpenSettings(SocketInteraction interaction, string toDoListName); 
+        public Task<bool> OpenSettings(SocketInteraction interaction, string toDoListName, ToDoSettingsContext context); 
 
         public Task<MessageContext> GetLastSettingsPage(ulong interactionID);
         public Task<MessageContext> GetSettingsPage(ulong interactionID, int index);
+        public Task<MessageContext> GetCurrentSettingsPage(ulong interactionID);
         public Task<MessageContext> GetNextSettingsPage(ulong interactionID);
 
         public Task HandleInteraction(SocketInteraction interaction);
 
-        public Task CloseInstance(ulong interactionID);
+        public Task CloseInstance(ulong interactionID, string? message=null);
 
-        public Task<bool> UpdateInstance(ulong interactionID, MessageContext context);
+        public Task<bool> UpdateInstance(SocketInteraction interactionID, MessageContext context);
+
+        public Task<bool> InstanceExists(ulong interactionID);
+
+        public Task<string> GetCurrentInstanceListName(ulong interactionID);
 
         public void Shutdown();
     }

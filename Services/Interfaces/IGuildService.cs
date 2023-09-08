@@ -11,11 +11,11 @@ namespace InnoTasker.Services.Interfaces
     //This is a bridge between other services and the guild database
     public interface IGuildService
     {
-        public GuildData GetGuildData(ulong guildID);
+        public Task<GuildData> GetGuildData(ulong guildID);
 
-        public ToDoList GetToDoList(ulong guildID, string listName);
-        public ToDoList? GetToDoListFromChannel(ulong guildID, ulong channelID);
+        public Task<ToDoList> GetToDoList(ulong guildID, string listName);
+        public Task<ToDoList?> GetToDoListFromChannel(ulong guildID, ulong channelID);
 
-        public void SaveGuild(ulong guildID);
+        public Task SaveGuild(ulong guildID);
     }
 }

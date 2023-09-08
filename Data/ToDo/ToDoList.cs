@@ -6,8 +6,11 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Data.ToDo
 {
+    public enum ToDoListChannelType { List, Command, Forum }
+
     public class ToDoList
     {
+        public int CurrentID { get; set; }
         public string Name { get; set; }
         public ulong ListChannelID { get; set; }
         public ulong CommandChannelID { get; set; }
@@ -20,7 +23,9 @@ namespace InnoTasker.Data.ToDo
         public List<ToDoItem> Items { get; set; } = new();
 
         public Dictionary<ulong, ListUserPermissions> UserPermissions { get; set; } = new();
+        public Dictionary<ulong, ListUserPermissions> RolePermissions { get; set; } = new();
 
-        public ToDoItem GetToDoItem(string itemName) => Items.FirstOrDefault(x => x.Name == itemName);
+        public async Task<ToDoItem> GetToDoItem(int id) => Items.FirstOrDefault(x => x.ID == id);
+        public async Task<ToDoItem> GetToDoItem(string itemName) => Items.FirstOrDefault(x => x.Name == itemName);
     }
 }

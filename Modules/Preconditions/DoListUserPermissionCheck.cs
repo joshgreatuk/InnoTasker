@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using InnoTasker.Data.ToDo;
 using InnoTasker.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,10 +24,21 @@ namespace InnoTasker.Modules.Preconditions
         public async override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
             IGuildService guildService = services.GetRequiredService<IGuildService>();
-            ToDoList? targetList = guildService.GetToDoListFromChannel(context.Guild.Id, context.Channel.Id);
+            ToDoList? targetList = await guildService.GetToDoListFromChannel(context.Guild.Id, context.Channel.Id);
             if (targetList == null) return PreconditionResult.FromError("This command must be done in a to-do list channel");
 
-            if (!targetList.UserPermissions.TryGetValue(context.User.Id, out ListUserPermissions permissions) || !permissions.HasFlag(permissionRequired))
+            bool hasPermittedRole = false;
+            IGuildUser user = await context.Guild.GetUserAsync(context.User.Id);
+            foreach (ulong roleId in user.RoleIds.Where(x => targetList.RolePermissions.ContainsKey(x)))
+            {
+                if (targetList.RolePermissions[roleId] >= permissionRequired)
+                {
+                    hasPermittedRole = true;
+                    break;
+                }
+            }
+
+            if (!hasPermittedRole && (!targetList.UserPermissions.TryGetValue(context.User.Id, out ListUserPermissions permissions) || permissions < permissionRequired))
             {
                 return PreconditionResult.FromError($"You must need {permissionRequired} permissions to run this command");
             }

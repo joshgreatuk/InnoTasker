@@ -17,11 +17,11 @@ namespace InnoTasker.Modules.Autocomplete
         {
             IGuildService guildService = services.GetRequiredService<IGuildService>();
             List<AutocompleteResult> results = new();
-            foreach (ToDoList list in guildService.GetGuildData(context.Guild.Id).Lists)
+            foreach (ToDoList list in guildService.GetGuildData(context.Guild.Id).Result.Lists)
             {
                 results.Add(new AutocompleteResult(list.Name, list.Name));
             }
-            return AutocompletionResult.FromSuccess(results);
+            return AutocompletionResult.FromSuccess(results.Take(25));
         }
     }
 }

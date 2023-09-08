@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Services.Interfaces.ToDo
 {
-    public enum ToDoSettingsInstanceMode { ToDoMenu, ToDoSettings }
+    public enum ToDoSettingsContext { New, Existing }
+    public enum ToDoSettingsInstanceMode { ToDoMenu, ToDoSettings } 
 
     public class ToDoSettingsInstance
     {
@@ -21,6 +22,7 @@ namespace InnoTasker.Services.Interfaces.ToDo
         public string toDoListName;
 
         //Settings Mode
+        public ToDoSettingsContext context;
         public int pageIndex = 0;
 
         public ToDoSettingsInstance(ulong interactionID)
