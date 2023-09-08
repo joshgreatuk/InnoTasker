@@ -15,5 +15,7 @@ namespace InnoTasker.Services.Interfaces
 
         public ToDoList GetToDoList(ulong guildID, string listName);
         public ToDoList? GetToDoListFromChannel(ulong guildID, ulong channelID);
+
+        public void SaveGuild(ulong guildID);
     }
 }

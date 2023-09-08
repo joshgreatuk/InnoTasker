@@ -1,4 +1,6 @@
-﻿using InnoTasker.Data;
+﻿using Discord.WebSocket;
+using InnoTasker.Data;
+using InnoTasker.Services.Interfaces.ToDo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +11,8 @@ namespace InnoTasker.Modules.Settings
 {
     public interface ISettingsPageBuilder
     {
-        public MessageContext BuildPage();
+        public Task<MessageContext> BuildPage(ToDoSettingsInstance instance);
+
+        public Task<MessageContext?> HandleInteraction(ToDoSettingsInstance instance, SocketInteraction interaction);
     }
 }

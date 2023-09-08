@@ -90,5 +90,10 @@ namespace InnoTasker.Services
                 || x.CommandChannelID == channelID 
                 || x.ForumChannelID == channelID);
         }
+
+        public void SaveGuild(ulong guildID)
+        {
+            _guildDatabase.Save(guildID);
+        }
     }
 }
