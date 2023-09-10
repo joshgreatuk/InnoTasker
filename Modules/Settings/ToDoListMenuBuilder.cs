@@ -72,5 +72,7 @@ namespace InnoTasker.Modules.Settings
         {
             await _settingsService.OpenSettings(interaction, instance.toDoListName, ToDoSettingsContext.Existing);
         }
+
+        public async Task<bool> CanProceed(ToDoSettingsInstance instance) => true;
     }
 }

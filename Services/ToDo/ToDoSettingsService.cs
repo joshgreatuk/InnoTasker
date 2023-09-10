@@ -31,7 +31,9 @@ namespace InnoTasker.Services.ToDo
             toDoListMenuBuilder = new ToDoListMenuBuilder(_guildService, this);
             settingsPages = new()
             {
-
+                new ToDoSettingsChannelsBuilder(_guildService),
+                new ToDoSettingsCategoriesBuilder(_guildService),
+                new ToDoSettingsPermissionsBuilder(_guildService)
             };
         }
 
