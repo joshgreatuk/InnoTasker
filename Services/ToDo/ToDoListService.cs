@@ -28,6 +28,8 @@ namespace InnoTasker.Services.ToDo
             await UpdateToDoList(await _guildService.GetToDoList(guildID, listName), renamedCategories, renamedStages);
         public async Task UpdateToDoList(ToDoList list, Dictionary<string, string> renamedCategories=null, Dictionary<string, string> renamedStages=null)
         {
+            //Check if channels have changed
+
             //Check and update channels
 
             //While going through, check for removed and renamed categories, check renamed before removed

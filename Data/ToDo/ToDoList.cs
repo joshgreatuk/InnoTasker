@@ -19,6 +19,7 @@ namespace InnoTasker.Data.ToDo
         public List<string> Categories { get; set; } = new();
         public List<string> Stages { get; set; } = new();
 
+        public ulong MessageChannel { get; set; } = new();
         public ulong MessageID { get; set; } = new();
         public List<ToDoItem> Items { get; set; } = new();
 

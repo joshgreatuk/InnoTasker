@@ -16,9 +16,15 @@ namespace InnoTasker.Modules.Settings
     {
         public async Task<MessageContext> BuildPage(ToDoSettingsInstance instance)
         {
+            List<string> entries = new();
+            entries.Add($"**To-Do list channel:** {(instance.toDoChannel != null ? MentionUtils.MentionChannel((ulong)instance.toDoChannel) : "None (Required)")}");
+            entries.Add($"**To-Do commands channel:** {(instance.toDoCommandChannel != null ? MentionUtils.MentionChannel((ulong)instance.toDoCommandChannel) : "None (Required)")}");
+            entries.Add($"**To-Do task forum channel:** {(instance.toDoForumChannel != null ? MentionUtils.MentionChannel((ulong)instance.toDoForumChannel) : "None (Optional)")}");
+
             EmbedBuilder embed = new EmbedBuilder()
                 .WithTitle($"{instance.toDoListName} settings: Channels")
-                .WithFooter("Use /");
+                .WithDescription(string.Join('\n', entries))
+                .WithFooter("Use '/admin set-todo-channel' to update channels or '/admin unset-todo-channel' to unset a channel");
 
             ComponentBuilder component = new();
             return new(embed.Build(), component);
@@ -26,7 +32,7 @@ namespace InnoTasker.Modules.Settings
 
         public async Task<MessageContext?> HandleInteraction(ToDoSettingsInstance instance, SocketInteraction interaction)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); //No extra interaction to handle
         }
 
         public async Task<bool> CanProceed(ToDoSettingsInstance instance)

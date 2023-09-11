@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using InnoTasker.Data.ToDo;
 using InnoTasker.Services.Interfaces;
+using System.Threading.Channels;
 
 namespace InnoTasker.Modules
 {
@@ -107,8 +108,8 @@ namespace InnoTasker.Modules
             await RespondAsync(ephemeral: true);
         }
 
-        [SlashCommand("settodochannel", "Sets a to-do list channel, must be used with a settings menu(/admin opensettingsmenu)")]
-        public async Task SetToDoListChannel(ToDoListChannelType channelType, IChannel channel = null)
+        [SlashCommand("set-todo-channel", "Sets a to-do list channel, used with '/admin opensettingsmenu'")]
+        public async Task SetToDoListChannel(ToDoListChannelType channelType, [ChannelTypes(new ChannelType[] {ChannelType.Text, ChannelType.Forum})] IChannel channel = null)
         {
             if (channel == null)
             {
@@ -130,16 +131,19 @@ namespace InnoTasker.Modules
             {
                 case ToDoListChannelType.List:
                     {
+                        if (channel.GetChannelType() is not ChannelType.Text) break;
                         instance.toDoChannel = channel.Id;
                         break;
                     }
                 case ToDoListChannelType.Command:
                     {
+                        if (channel.GetChannelType() is not ChannelType.Text) break;
                         instance.toDoCommandChannel = channel.Id;
                         break;
                     }
                 case ToDoListChannelType.Forum:
                     {
+                        if (channel.GetChannelType() is not ChannelType.Forum) break;
                         instance.toDoForumChannel = channel.Id;
                         break;
                     }
@@ -148,6 +152,42 @@ namespace InnoTasker.Modules
             await RespondAsync(ephemeral: true);
         }
 
+        [SlashCommand("unset-todo-channel", "Unsets a to-do channel, used with '/admin opensettingsmenu'")]
+        public async Task UnsetToDoChannel(ToDoListChannelType channelType)
+        {
+            if (!await _toDoSettingsService.InstanceExists(Context.Channel.Id))
+            {
+                await RespondAsync(ephemeral: true, embed: new EmbedBuilder()
+                    .WithTitle("Error")
+                    .WithDescription("Sorry, this command can only be used with a settings menu (/admin opensettingsmenu)")
+                    .Build());
+            }
+
+            ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
+
+            switch (channelType)
+            {
+                case ToDoListChannelType.List:
+                    {
+                        instance.toDoChannel = null;
+                        break;
+                    }
+                case ToDoListChannelType.Command:
+                    {
+                        instance.toDoCommandChannel = null;
+                        break;
+                    }
+                case ToDoListChannelType.Forum:
+                    {
+                        instance.toDoForumChannel = null;
+                        break;
+                    }
+            }
+            await UpdateCurrentSettingsPage();
+            await RespondAsync(ephemeral: true);
+        }
+
+        [SlashCommand("add-category", "Adds a task category, used with '/admin opensettingsmenu'")]
         public async Task AddCategory(string categoryName)
         {
             ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
@@ -161,6 +201,7 @@ namespace InnoTasker.Modules
             await RespondAsync(ephemeral: true);
         }
 
+        [SlashCommand("remove-category", "Removes a task category, used with '/admin opensettingsmenu'")]
         public async Task RemoveCategory([Autocomplete(typeof(SettingsCategoryAutocomplete))]string categoryName)
         {
             ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
@@ -175,6 +216,7 @@ namespace InnoTasker.Modules
             await RespondAsync(ephemeral: true);
         }
 
+        [SlashCommand("rename-category", "Renames a task category, used with '/admin opensettingsmenu'")]
         public async Task RenameCategory([Autocomplete(typeof(SettingsCategoryAutocomplete))] string categoryName, string newName)
         {
             ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
@@ -204,6 +246,7 @@ namespace InnoTasker.Modules
             await RespondAsync(ephemeral: true);
         }
 
+        [SlashCommand("add-stage", "Adds a task stage, used with '/admin opensettingsmenu'")]
         public async Task AddStage(string stageName)
         {
             ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
@@ -217,6 +260,7 @@ namespace InnoTasker.Modules
             await RespondAsync(ephemeral: true);
         }
 
+        [SlashCommand("remove-stage", "Removes a task stage, used with '/admin opensettingsmenu'")]
         public async Task RemoveStage([Autocomplete(typeof(SettingsStageAutocomplete))] string stageName)
         {
             ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
@@ -231,6 +275,7 @@ namespace InnoTasker.Modules
             await RespondAsync(ephemeral: true);
         }
 
+        [SlashCommand("rename-stage", "Renames a task stage, used with '/admin opensettingsmenu'")]
         public async Task RenameStage([Autocomplete(typeof(SettingsStageAutocomplete))] string stageName, string newName)
         {
             ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
@@ -260,6 +305,7 @@ namespace InnoTasker.Modules
             await RespondAsync(ephemeral: true);
         }
 
+        [SlashCommand("set-user-permission", "Sets the to-do list permissions for a user, used with '/admin opensettingsmenu'")]
         public async Task SetUserPermission(IUser user, ListUserPermissions permissions)
         {
             ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
@@ -280,6 +326,7 @@ namespace InnoTasker.Modules
             }
         }
 
+        [SlashCommand("set-role-permission", "Sets the to-do list permissions for a role, used with '/admin opensettingsmenu'")]
         public async Task SetRolePermission(IRole role, ListUserPermissions permissions)
         {
             ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
