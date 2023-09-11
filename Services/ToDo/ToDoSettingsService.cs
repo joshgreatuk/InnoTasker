@@ -46,11 +46,10 @@ namespace InnoTasker.Services.ToDo
                 instance.mode = ToDoSettingsInstanceMode.ToDoMenu;
 
                 MessageContext message = await toDoListMenuBuilder.BuildPage(instance);
-                message.component.WithButton("Close", "settings-close");
 
                 if (instance.message != null)
                 {
-                    await UpdateInstance(interaction, message);   
+                    await UpdateInstance(interaction, message);
                 }
                 else
                 {
@@ -112,10 +111,16 @@ namespace InnoTasker.Services.ToDo
             //Add back, close and forward buttons before sending
             ISettingsPageBuilder builder = settingsPages[instance.pageIndex];
             MessageContext page = await builder.BuildPage(instance);
-            page.component.WithButton("<-", "settings-last", ButtonStyle.Secondary)
-                .WithButton("Save & Close", "settings-close", ButtonStyle.Danger, 
-                    disabled:instance.context is ToDoSettingsContext.New && !await settingsPages.Last().CanProceed(instance))
-                .WithButton("->", "settings-next", ButtonStyle.Secondary, disabled: !await settingsPages[instance.pageIndex].CanProceed(instance));
+            page.component.WithButton("<-", "settings-last", ButtonStyle.Secondary);
+            if (await settingsPages[instance.pageIndex].CanProceed(instance))
+            {
+                page.component.WithButton("Save & Close", "settings-close", ButtonStyle.Danger);
+            }
+            else
+            {
+                page.component.WithButton("Cancel", "settings-list-close", ButtonStyle.Danger);
+            }
+            page.component.WithButton("->", "settings-next", ButtonStyle.Secondary, disabled: !await settingsPages[instance.pageIndex].CanProceed(instance));
             return page;
         }
         public async Task<MessageContext> GetCurrentSettingsPage(ulong interactionID) => await GetSettingsPage(await GetSettingsInstance(interactionID));
@@ -167,7 +172,8 @@ namespace InnoTasker.Services.ToDo
 
             if (message != null)
             {
-                await UpdateInstance(interaction, (MessageContext)message);
+                MessageContext context = (MessageContext)message;
+                await UpdateInstance(interaction, context);
             }
         }
 
@@ -175,7 +181,15 @@ namespace InnoTasker.Services.ToDo
         {
             try
             {
-                await interaction.Channel.SendMessageAsync(embed: context.embed, components: context.component.Build());
+                ToDoSettingsInstance instance = await GetSettingsInstance(interaction.Channel.Id);
+                if (instance.message != null)
+                {
+                    await instance.message.ModifyAsync(x => { x.Embed = context.embed; x.Components = context.component.Build(); });
+                }
+                else
+                {
+                    await interaction.Channel.SendMessageAsync(embed: context.embed, components: context.component.Build());
+                }
             }
             catch (Exception ex)
             {
@@ -206,7 +220,7 @@ namespace InnoTasker.Services.ToDo
             return true;
         }
 
-        public async void Shutdown() 
+        public async Task Shutdown() 
         {
             //Close all settings instances and leave a message saying sorry :P
             foreach (ToDoSettingsInstance instance in toDoSettingsInstances.ToList())
@@ -226,7 +240,7 @@ namespace InnoTasker.Services.ToDo
                 //Instead of removing instance message, replace it with a sorry message
                 EmbedBuilder newEmbed = new EmbedBuilder().WithTitle("Sorry!")
                     .WithDescription(message);
-                await instance.message.ModifyAsync(x => x.Embed = newEmbed.Build());
+                await instance.message.ModifyAsync(x => { x.Embed = newEmbed.Build(); x.Components = null; });
                 await _logger.LogAsync(LogSeverity.Debug, this, $"Closed instance {instance.interactionID} with message specified");
             }
             else if (instance.message != null)

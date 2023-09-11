@@ -27,13 +27,13 @@ namespace InnoTasker.Modules
         {
             MessageContext message = await _settingsService.GetNextSettingsPage(Context.Channel.Id);
             await _settingsService.UpdateInstance(Context.Interaction, message);
-            await RespondAsync(ephemeral: true);
+            await RespondAsync("Done!", ephemeral: true);
+            await DeleteOriginalResponseAsync();
         }
 
         [ComponentInteraction("settings-close")]
         public async Task ClosePage()
         {
-            await DeferAsync(true);
             //Instance will already be closed if there was an error
             if (await _settingsService.SaveInstance(Context.Channel.Id))
             {
@@ -41,7 +41,16 @@ namespace InnoTasker.Modules
                 await _toDoService.UpdateToDoList(instance.guildID, instance.toDoListName, instance.categoriesRenamed, instance.stagesRenamed);
                 await _settingsService.CloseInstance(Context.Channel.Id);
             }
-            await RespondAsync(ephemeral: true);
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
+        }
+
+        [ComponentInteraction("settings-list-close")]
+        public async Task CloseListPage()
+        {
+            await _settingsService.CloseInstance(Context.Channel.Id);
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         [ComponentInteraction("settings-last")]
@@ -49,14 +58,16 @@ namespace InnoTasker.Modules
         {
             MessageContext message = await _settingsService.GetLastSettingsPage(Context.Channel.Id);
             await _settingsService.UpdateInstance(Context.Interaction, message);
-            await RespondAsync(ephemeral:true);
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         [ComponentInteraction("settings-comp-*")]
         public async Task HandleSettingsInteraction()
         {
             await _settingsService.HandleInteraction(Context.Interaction);
-            await RespondAsync(ephemeral: true);
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
     }
 }

@@ -17,7 +17,7 @@ using System.Threading.Channels;
 namespace InnoTasker.Modules
 {
     [Group("admin", "Server admin commands")]
-    [RequireUserPermission(Discord.GuildPermission.Administrator)]
+    [RequireUserPermission(GuildPermission.Administrator)]
     public class AdminModule : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly IGuildService _guildService;
@@ -34,14 +34,15 @@ namespace InnoTasker.Modules
         [SlashCommand("openlistmenu", "Open the to-do list menu")]
         public async Task OpenToDoListMenu()
         {
-            await DeferAsync(true);
+            await DeferAsync();
             if (await _toDoSettingsService.OpenToDoListPage(Context.Interaction))
             {
-                await RespondAsync();
+                await FollowupAsync("Done!");
+                await DeleteOriginalResponseAsync();
             }
             else
             {
-                await RespondAsync(embed: new Discord.EmbedBuilder().WithTitle($"Error")
+                await FollowupAsync(ephemeral: true, embed: new EmbedBuilder().WithTitle($"Error")
                     .WithDescription("Sorry, there was an error opening the to do list menu").Build());
             }
         }
@@ -49,14 +50,15 @@ namespace InnoTasker.Modules
         [SlashCommand("opensettingsmenu", "Open a to-do list's settings menu")]
         public async Task OpenToDoSettingsMenu([Autocomplete(typeof(ToDoListAutocomplete))] string toDoName)
         {
-            await DeferAsync(true);
+            await DeferAsync();
             if (await _toDoSettingsService.OpenSettings(Context.Interaction, toDoName, ToDoSettingsContext.Existing))
             {
-                await RespondAsync(ephemeral: true);
+                await FollowupAsync("Done!");
+                await DeleteOriginalResponseAsync();
             }
             else
             {
-                await RespondAsync(ephemeral: true, embed: new Discord.EmbedBuilder().WithTitle($"Error")
+                await FollowupAsync(ephemeral: true, embed: new EmbedBuilder().WithTitle($"Error")
                     .WithDescription("Sorry, there was an error opening the settings menu").Build());
             }
         }
@@ -64,14 +66,15 @@ namespace InnoTasker.Modules
         [SlashCommand("newtodolist", "Open the to-do list creation wizard")]
         public async Task NewToDoList(string toDoName)
         {
-            await DeferAsync(true);
+            await DeferAsync();
             if (await _toDoSettingsService.OpenSettings(Context.Interaction, toDoName, ToDoSettingsContext.New))
             {
-                await RespondAsync(ephemeral: true);
+                await FollowupAsync("Done!");
+                await DeleteOriginalResponseAsync();
             }
             else
             {
-                await RespondAsync(ephemeral: true, embed: new Discord.EmbedBuilder().WithTitle($"Error")
+                await FollowupAsync(ephemeral: true, embed: new EmbedBuilder().WithTitle($"Error")
                     .WithDescription("Sorry, there was an error creating a new to-do list").Build());
             }
         }
@@ -79,7 +82,7 @@ namespace InnoTasker.Modules
         [SlashCommand("deletetodolist", "Delete a to-do list")]
         public async Task DeleteToDoList([Autocomplete(typeof(ToDoListAutocomplete))] string toDoName)
         {
-            await RespondAsync(embed: new EmbedBuilder()
+            await RespondAsync(ephemeral: true, embed: new EmbedBuilder()
                 .WithTitle("Are you sure?")
                 .WithDescription($"Would you really like to delete list '{toDoName}'")
                 .Build()
@@ -97,7 +100,8 @@ namespace InnoTasker.Modules
             await _toDoListService.DeleteToDoList(Context.Guild.Id, toDoName);
             //Update a settings instance if one exists
             if (await _toDoSettingsService.InstanceExists(Context.Channel.Id)) await _toDoSettingsService.OpenToDoListPage(Context.Interaction);
-            await RespondAsync(ephemeral: true);
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         [ComponentInteraction("admin-deletelist-no")]
@@ -105,18 +109,13 @@ namespace InnoTasker.Modules
         {
             //Delete response
             await Context.Interaction.GetOriginalResponseAsync().Result.DeleteAsync();
-            await RespondAsync(ephemeral: true);
+            await RespondAsync("Not Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         [SlashCommand("set-todo-channel", "Sets a to-do list channel, used with '/admin opensettingsmenu'")]
         public async Task SetToDoListChannel(ToDoListChannelType channelType, [ChannelTypes(new ChannelType[] {ChannelType.Text, ChannelType.Forum})] IChannel channel = null)
         {
-            if (channel == null)
-            {
-                await RespondAsync(ephemeral: true);
-                return;
-            }
-
             if (!await _toDoSettingsService.InstanceExists(Context.Channel.Id))
             {
                 await RespondAsync(ephemeral: true, embed: new EmbedBuilder()
@@ -131,25 +130,26 @@ namespace InnoTasker.Modules
             {
                 case ToDoListChannelType.List:
                     {
-                        if (channel.GetChannelType() is not ChannelType.Text) break;
-                        instance.toDoChannel = channel.Id;
+                        if (channel != null && channel.GetChannelType() is not ChannelType.Text) break;
+                        instance.toDoChannel = channel != null ? channel.Id : null;
                         break;
                     }
                 case ToDoListChannelType.Command:
                     {
-                        if (channel.GetChannelType() is not ChannelType.Text) break;
-                        instance.toDoCommandChannel = channel.Id;
+                        if (channel != null && channel.GetChannelType() is not ChannelType.Text) break;
+                        instance.toDoCommandChannel = channel != null ? channel.Id : null;
                         break;
                     }
                 case ToDoListChannelType.Forum:
                     {
-                        if (channel.GetChannelType() is not ChannelType.Forum) break;
-                        instance.toDoForumChannel = channel.Id;
+                        if (channel != null && channel.GetChannelType() is not ChannelType.Forum) break;
+                        instance.toDoForumChannel = channel != null ? channel.Id : null;
                         break;
                     }
             }
             await UpdateCurrentSettingsPage();
-            await RespondAsync(ephemeral: true);
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         [SlashCommand("unset-todo-channel", "Unsets a to-do channel, used with '/admin opensettingsmenu'")]
@@ -184,7 +184,8 @@ namespace InnoTasker.Modules
                     }
             }
             await UpdateCurrentSettingsPage();
-            await RespondAsync(ephemeral: true);
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         [SlashCommand("add-category", "Adds a task category, used with '/admin opensettingsmenu'")]
@@ -198,7 +199,8 @@ namespace InnoTasker.Modules
             }
             instance.categoryList.Add(categoryName);
             await UpdateCurrentSettingsPage();
-            await RespondAsync(ephemeral: true);
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         [SlashCommand("remove-category", "Removes a task category, used with '/admin opensettingsmenu'")]
@@ -207,13 +209,15 @@ namespace InnoTasker.Modules
             ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
             if (!instance.categoryList.Contains(categoryName))
             {
-                await RespondAsync(ephemeral: true);
+                await RespondAsync("Done!");
+                await DeleteOriginalResponseAsync();
                 return;
             }
             instance.categoryList.Remove(categoryName);
 
             await UpdateCurrentSettingsPage();
-            await RespondAsync(ephemeral: true);
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         [SlashCommand("rename-category", "Renames a task category, used with '/admin opensettingsmenu'")]
@@ -222,7 +226,8 @@ namespace InnoTasker.Modules
             ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
             if (!instance.categoryList.Contains(categoryName) || instance.categoryList.Contains(newName))
             {
-                await RespondAsync(ephemeral: true);
+                await RespondAsync("Done!");
+                await DeleteOriginalResponseAsync();
                 return;
             }
             instance.categoryList.Remove(categoryName);
@@ -243,7 +248,8 @@ namespace InnoTasker.Modules
             }
 
             await UpdateCurrentSettingsPage();
-            await RespondAsync(ephemeral: true);
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         [SlashCommand("add-stage", "Adds a task stage, used with '/admin opensettingsmenu'")]
@@ -252,12 +258,14 @@ namespace InnoTasker.Modules
             ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
             if (instance.stageList.Contains(stageName))
             {
-                await RespondAsync(ephemeral: true);
+                await RespondAsync("Done!");
+                await DeleteOriginalResponseAsync();
                 return;
             }
             instance.stageList.Add(stageName);
             await UpdateCurrentSettingsPage();
-            await RespondAsync(ephemeral: true);
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         [SlashCommand("remove-stage", "Removes a task stage, used with '/admin opensettingsmenu'")]
@@ -266,13 +274,15 @@ namespace InnoTasker.Modules
             ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
             if (!instance.stageList.Contains(stageName))
             {
-                await RespondAsync(ephemeral: true);
+                await RespondAsync("Done!");
+                await DeleteOriginalResponseAsync();
                 return;
             }
             instance.stageList.Remove(stageName);
 
             await UpdateCurrentSettingsPage();
-            await RespondAsync(ephemeral: true);
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         [SlashCommand("rename-stage", "Renames a task stage, used with '/admin opensettingsmenu'")]
@@ -281,7 +291,8 @@ namespace InnoTasker.Modules
             ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
             if (!instance.stageList.Contains(stageName) || instance.stageList.Contains(newName))
             {
-                await RespondAsync(ephemeral: true);
+                await RespondAsync("Done!");
+                await DeleteOriginalResponseAsync();
                 return;
             }
             instance.stageList.Remove(stageName);
@@ -302,7 +313,8 @@ namespace InnoTasker.Modules
             }
 
             await UpdateCurrentSettingsPage();
-            await RespondAsync(ephemeral: true);
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         [SlashCommand("set-user-permission", "Sets the to-do list permissions for a user, used with '/admin opensettingsmenu'")]
@@ -324,6 +336,8 @@ namespace InnoTasker.Modules
             {
                 instance.userPermissions.Add(user.Id, permissions);
             }
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         [SlashCommand("set-role-permission", "Sets the to-do list permissions for a role, used with '/admin opensettingsmenu'")]
@@ -345,6 +359,8 @@ namespace InnoTasker.Modules
             {
                 instance.rolePermissions.Add(role.Id, permissions);
             }
+            await RespondAsync("Done!");
+            await DeleteOriginalResponseAsync();
         }
 
         public async Task UpdateCurrentSettingsPage()

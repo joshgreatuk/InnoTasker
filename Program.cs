@@ -36,7 +36,7 @@ namespace InnoTasker
         {
             DiscordSocketConfig discordSocketConfig = new()
             {
-                GatewayIntents = GatewayIntents.None
+                GatewayIntents = GatewayIntents.AllUnprivileged & ~GatewayIntents.GuildInvites & ~GatewayIntents.GuildScheduledEvents
             };
 
             string basePath = $"{Directory.GetCurrentDirectory()}\\";

@@ -33,6 +33,6 @@ namespace InnoTasker.Services.Interfaces.ToDo
 
         public Task<bool> SaveInstance(ulong instanceID);
 
-        public void Shutdown();
+        public Task Shutdown();
     }
 }

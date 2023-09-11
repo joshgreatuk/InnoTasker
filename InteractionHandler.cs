@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Discord.Rest;
 using Discord.WebSocket;
 using InnoTasker.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,7 +33,7 @@ namespace InnoTasker
 
             _interactionService = services.GetRequiredService<InteractionService>();
             _interactionService.Log += _logger.LogAsync;
-            _interactionService.InteractionExecuted += OnInteractionExecuted;
+            //6_interactionService.InteractionExecuted += OnInteractionExecuted;
         }
 
         public async Task OnClientReady()
@@ -40,11 +41,11 @@ namespace InnoTasker
             await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
             if (Program.IsDebug())
             {
-                await _interactionService.AddCommandsToGuildAsync(s_testGuild, true);
+                await _interactionService.AddModulesToGuildAsync(s_testGuild, true, _interactionService.Modules.ToArray());
             }
             else
             {
-                await _interactionService.AddCommandsGloballyAsync(true);
+                await _interactionService.AddModulesGloballyAsync(true, _interactionService.Modules.ToArray());
             }
             await _logger.LogAsync(LogSeverity.Info, this, $"InteractionHandler Initialized!");
         }
@@ -62,12 +63,12 @@ namespace InnoTasker
             }
         }
 
-        public async Task OnInteractionExecuted(ICommandInfo info, IInteractionContext context, IResult result)
-        {
-            if (result.IsSuccess) return;
+        //public async Task OnInteractionExecuted(ICommandInfo info, IInteractionContext context, IResult result)
+        //{
+        //    if (result.IsSuccess) return;
 
-            await _logger.LogAsync(LogSeverity.Error, this, "OnInteractionExecuted Error", new Exception(result.ErrorReason));
-            await context.Interaction.RespondAsync(embed: new EmbedBuilder().WithTitle($"InnoTasker Error").WithDescription(result.ErrorReason).Build());
-        }
+        //    await _logger.LogAsync(LogSeverity.Error, this, "OnInteractionExecuted Error", new Exception(result.ErrorReason));
+        //    //await context.Interaction.RespondAsync(embed: new EmbedBuilder().WithTitle($"InnoTasker Error").WithDescription(result.ErrorReason).Build());
+        //}
     }
 }
