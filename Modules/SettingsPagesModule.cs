@@ -27,7 +27,7 @@ namespace InnoTasker.Modules
         {
             MessageContext message = await _settingsService.GetNextSettingsPage(Context.Channel.Id);
             await _settingsService.UpdateInstance(Context.Interaction, message);
-            await RespondAsync("Done!", ephemeral: true);
+            await RespondAsync("Done!");
             await DeleteOriginalResponseAsync();
         }
 

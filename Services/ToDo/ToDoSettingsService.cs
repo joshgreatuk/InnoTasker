@@ -73,7 +73,7 @@ namespace InnoTasker.Services.ToDo
                 instance.toDoListName = toDoListName;
                 instance.mode = ToDoSettingsInstanceMode.ToDoSettings;
 
-                if (context is not ToDoSettingsContext.New) await instance.GetListData(_guildService);
+                if (context is not ToDoSettingsContext.New) await instance.GrabGuildSettigns(_guildService);
 
                 MessageContext message = await GetSettingsPage(instance);
                 await UpdateInstance(interaction, message);
@@ -225,6 +225,7 @@ namespace InnoTasker.Services.ToDo
 
         public async Task CloseInstance(ToDoSettingsInstance instance, string? message=null)
         {
+            toDoSettingsInstances.Remove(instance);
             if (message != null && instance.message != null)
             {
                 //Instead of removing instance message, replace it with a sorry message
@@ -235,17 +236,19 @@ namespace InnoTasker.Services.ToDo
             }
             else if (instance.message != null)
             {
-                await instance.message.DeleteAsync();
+                try
+                {
+                    await instance.message.DeleteAsync();
+                }
+                catch { }
                 await _logger.LogAsync(LogSeverity.Debug, this, $"Closed settings instance {instance.interactionID}");
             }
             await _guildService.SaveGuild(instance.guildID);
-
-            toDoSettingsInstances.Remove(instance);
         }
 
         public async Task HandleMessageDeleted(Cacheable<IMessage, ulong> message, Cacheable<IMessageChannel, ulong> messageChannel)
         {
-            if (await InstanceExistsFromMessage(message.Id)) await CloseInstance(message.Id);
+            if (await InstanceExistsFromMessage(message.Id)) await CloseInstance(messageChannel.Id);
         }
     }
 }

@@ -16,9 +16,9 @@ namespace InnoTasker.Modules.Settings
         public async Task<MessageContext> BuildPage(ToDoSettingsInstance instance)
         {
             List<string> roleEntries = new();
-            roleEntries.AddRange(instance.rolePermissions.OrderBy(x => x.Value).Select(x => $"{MentionUtils.MentionRole(x.Key)} : {x.Value}"));
+            roleEntries.AddRange(instance.rolePermissions.OrderByDescending(x => x.Value).Select(x => $"{MentionUtils.MentionRole(x.Key)} : {x.Value}"));
             List<string> userEntries = new();
-            userEntries.AddRange(instance.userPermissions.OrderBy(x => x.Value).Select(x => $"{MentionUtils.MentionUser(x.Key)} : {x.Value}"));
+            userEntries.AddRange(instance.userPermissions.OrderByDescending(x => x.Value).Select(x => $"{MentionUtils.MentionUser(x.Key)} : {x.Value}"));
 
             EmbedBuilder embed = new EmbedBuilder()
                 .WithTitle($"{instance.toDoListName} settings: Permissions")

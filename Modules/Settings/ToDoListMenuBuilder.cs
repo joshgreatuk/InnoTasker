@@ -28,18 +28,20 @@ namespace InnoTasker.Modules.Settings
             GuildData guild = await _guildService.GetGuildData(instance.guildID);
             List<string> toDoListEntries = guild.Lists.Select(x => x.Name).ToList();
             string toDoListDescription = String.Join('\n', toDoListEntries);
-            if (instance.toDoListName == String.Empty &&  toDoListEntries.Count > 0) instance.toDoListName = toDoListEntries[0];
+            if (instance.toDoListName == null &&  toDoListEntries.Count > 0) instance.toDoListName = toDoListEntries[0];
             EmbedBuilder embed = new EmbedBuilder().WithTitle("To-Do List Menu")
                 .WithFields(new[] { new EmbedFieldBuilder().WithName($"To-Do Lists:").WithValue(toDoListEntries.Count > 0 ? toDoListDescription : "None") })
                 .WithFooter("You can add a new list with /admin new-todolist or remove one with /admin delete-todolist");
             ComponentBuilder component = new ComponentBuilder()
                 .WithSelectMenu(new SelectMenuBuilder()
                     .WithCustomId("settings-comp-listselect")
-                    .WithOptions(toDoListEntries.Count < 1 ? new() { new SelectMenuOptionBuilder().WithLabel("None").WithValue("None") } 
+                    .WithOptions(toDoListEntries.Count < 1 ? new() { new SelectMenuOptionBuilder().WithLabel("None").WithValue("None") }
                         : toDoListEntries.Select(x => new SelectMenuOptionBuilder()
-                        .WithValue(x).WithDefault(x == instance.toDoListName)).ToList())
+                        .WithLabel(x)
+                        .WithValue(x)
+                        .WithDefault(x == instance.toDoListName)).ToList())
                     .WithDisabled(toDoListEntries.Count < 1))
-                .WithButton("Settings", "settings-comp-listsettingsbutton", disabled: instance.toDoListName == String.Empty || toDoListEntries.Count < 1)
+                .WithButton("Settings", "settings-comp-listsettingsbutton", disabled: instance.toDoListName == null || toDoListEntries.Count < 1)
                 .WithButton("Close", "settings-list-close");
             return new MessageContext(embed.Build(), component);
         }

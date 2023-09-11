@@ -33,7 +33,7 @@ namespace InnoTasker
 
             _interactionService = services.GetRequiredService<InteractionService>();
             _interactionService.Log += _logger.LogAsync;
-            //6_interactionService.InteractionExecuted += OnInteractionExecuted;
+            //_interactionService.InteractionExecuted += OnInteractionExecuted;
         }
 
         public async Task OnClientReady()

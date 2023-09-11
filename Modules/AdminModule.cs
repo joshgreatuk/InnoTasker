@@ -92,25 +92,26 @@ namespace InnoTasker.Modules
                 .Build());
         }
 
-        [ComponentInteraction("admin-deletelist-yes¬*")]
+        [ComponentInteraction("admin-deletelist-yes¬*", true)]
         public async Task DeleteToDoListAccept()
         {
+            await DeferAsync();
+            await Context.Interaction.DeleteOriginalResponseAsync();
             IComponentInteraction interaction = (IComponentInteraction)Context.Interaction;
             string toDoName = interaction.Data.CustomId.Split("¬").Last(); //TO-DO: Disallow to do list names with ¬ in them
             await _toDoListService.DeleteToDoList(Context.Guild.Id, toDoName);
             //Update a settings instance if one exists
             if (await _toDoSettingsService.InstanceExists(Context.Channel.Id)) await _toDoSettingsService.OpenToDoListPage(Context.Interaction);
-            await RespondAsync("Done!");
-            await DeleteOriginalResponseAsync();
+            await FollowupAsync("Deleted list!", ephemeral: true);
         }
 
-        [ComponentInteraction("admin-deletelist-no")]
+        [ComponentInteraction("admin-deletelist-no", true)]
         public async Task DeleteToDoListDeny()
         {
             //Delete response
-            await Context.Interaction.GetOriginalResponseAsync().Result.DeleteAsync();
-            await RespondAsync("Not Done!");
-            await DeleteOriginalResponseAsync();
+            await DeferAsync();
+            await Context.Interaction.DeleteOriginalResponseAsync();
+            await FollowupAsync("Not Done!", ephemeral: true);
         }
 
         [SlashCommand("set-todo-channel", "Sets a to-do list channel, used with '/admin opensettingsmenu'")]
@@ -336,6 +337,7 @@ namespace InnoTasker.Modules
             {
                 instance.userPermissions.Add(user.Id, permissions);
             }
+            await UpdateCurrentSettingsPage();
             await RespondAsync("Done!");
             await DeleteOriginalResponseAsync();
         }
@@ -359,6 +361,7 @@ namespace InnoTasker.Modules
             {
                 instance.rolePermissions.Add(role.Id, permissions);
             }
+            await UpdateCurrentSettingsPage();
             await RespondAsync("Done!");
             await DeleteOriginalResponseAsync();
         }

@@ -22,11 +22,8 @@ namespace InnoTasker.Modules.Autocomplete
                 return AutocompletionResult.FromError(new Exception($"No settings menu instance found"));
             }
 
-            IGuildService guildService = services.GetRequiredService<IGuildService>();
-            string listName = await settingsService.GetCurrentInstanceListName(context.Channel.Id);
-
-            ToDoList list = await guildService.GetToDoList(context.Guild.Id, listName);
-            return AutocompletionResult.FromSuccess(list.Stages.Select(x => new AutocompleteResult(x, x)).Take(25));
+            ToDoSettingsInstance instance = await settingsService.GetSettingsInstance(context.Channel.Id);
+            return AutocompletionResult.FromSuccess(instance.stageList.Select(x => new AutocompleteResult(x, x)).Take(25));
         }
     }
 }
