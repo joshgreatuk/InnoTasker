@@ -24,11 +24,13 @@ namespace InnoTasker.Services.ToDo
             //Update the todo list and message
         }
 
-        public async Task UpdateToDoList(ulong guildID, string listName) => 
-            await UpdateToDoList(await _guildService.GetToDoList(guildID, listName));
-        public async Task UpdateToDoList(ToDoList list)
+        public async Task UpdateToDoList(ulong guildID, string listName, Dictionary<string, string> renamedCategories = null, Dictionary<string, string> renamedStages = null) => 
+            await UpdateToDoList(await _guildService.GetToDoList(guildID, listName), renamedCategories, renamedStages);
+        public async Task UpdateToDoList(ToDoList list, Dictionary<string, string> renamedCategories=null, Dictionary<string, string> renamedStages=null)
         {
             //Check and update channels
+
+            //While going through, check for removed and renamed categories, check renamed before removed
         }
 
         public async Task UpdateToDoItem(ulong guildID, string listName, int itemID) => 
@@ -44,44 +46,5 @@ namespace InnoTasker.Services.ToDo
         {
 
         }
-
-        //TO-DO: write Category/Stage updates
-        #region Category/Stage Updates 
-        public async Task CategoryRemoved(ToDoList list, string category)
-        {
-            foreach (ToDoItem item in list.Items.Where(x => x.Categories.Contains(category)))
-            {
-                item.Categories.Remove(category);
-                await UpdateToDoItem(item);
-            }
-        }
-
-        public async Task CategoryRenamed(ToDoList list, string category, string newCategory)
-        {
-            foreach (ToDoItem item in list.Items.Where(x => x.Categories.Contains(category)))
-            {
-                item.Categories[item.Categories.IndexOf(category)] = newCategory;
-                await UpdateToDoItem(item);
-            }
-        }
-
-        public async Task StageRemoved(ToDoList list, string stage)
-        {
-            foreach (ToDoItem item in list.Items.Where(x => x.Stages.Contains(stage)))
-            {
-                item.Stages.Remove(stage);
-                await UpdateToDoItem(item);
-            }
-        }
-
-        public async Task StageRenamed(ToDoList list, string stage, string newStage)
-        {
-            foreach (ToDoItem item in list.Items.Where(x => x.Stages.Contains(stage)))
-            {
-                item.Stages[item.Stages.IndexOf(stage)] = newStage;
-                await UpdateToDoItem(item);
-            }
-        }
-        #endregion
     }
 }

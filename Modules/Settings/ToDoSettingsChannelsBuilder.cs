@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
 using InnoTasker.Data;
 using InnoTasker.Services.Interfaces;
@@ -13,16 +14,14 @@ namespace InnoTasker.Modules.Settings
 {
     public class ToDoSettingsChannelsBuilder : ISettingsPageBuilder
     {
-        private readonly IGuildService _guildService;
-
-        public ToDoSettingsChannelsBuilder(IGuildService guildService)
-        {
-            _guildService = guildService;
-        }
-
         public async Task<MessageContext> BuildPage(ToDoSettingsInstance instance)
         {
-            throw new NotImplementedException();
+            EmbedBuilder embed = new EmbedBuilder()
+                .WithTitle($"{instance.toDoListName} settings: Channels")
+                .WithFooter("Use /");
+
+            ComponentBuilder component = new();
+            return new(embed.Build(), component);
         }
 
         public async Task<MessageContext?> HandleInteraction(ToDoSettingsInstance instance, SocketInteraction interaction)
@@ -32,7 +31,7 @@ namespace InnoTasker.Modules.Settings
 
         public async Task<bool> CanProceed(ToDoSettingsInstance instance)
         {
-            throw new NotImplementedException();
+            return instance.toDoChannel != null && instance.toDoCommandChannel != null;
         }
     }
 }

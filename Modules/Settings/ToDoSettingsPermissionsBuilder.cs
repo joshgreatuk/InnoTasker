@@ -12,13 +12,6 @@ namespace InnoTasker.Modules.Settings
 { 
     public class ToDoSettingsPermissionsBuilder : ISettingsPageBuilder
     {
-        private readonly IGuildService _guildService;
-
-        public ToDoSettingsPermissionsBuilder(IGuildService guildService)
-        {
-            _guildService = guildService;
-        }
-
         public async Task<MessageContext> BuildPage(ToDoSettingsInstance instance)
         {
             throw new NotImplementedException();
@@ -31,7 +24,7 @@ namespace InnoTasker.Modules.Settings
 
         public async Task<bool> CanProceed(ToDoSettingsInstance instance)
         {
-            throw new NotImplementedException();
+            return true;
         }
     }
 }

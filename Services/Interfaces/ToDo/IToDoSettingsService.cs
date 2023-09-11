@@ -28,7 +28,10 @@ namespace InnoTasker.Services.Interfaces.ToDo
 
         public Task<bool> InstanceExists(ulong interactionID);
 
+        public Task<ToDoSettingsInstance> GetSettingsInstance(ulong instanceID);
         public Task<string> GetCurrentInstanceListName(ulong interactionID);
+
+        public Task<bool> SaveInstance(ulong instanceID);
 
         public void Shutdown();
     }

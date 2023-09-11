@@ -31,9 +31,9 @@ namespace InnoTasker.Services.ToDo
             toDoListMenuBuilder = new ToDoListMenuBuilder(_guildService, this);
             settingsPages = new()
             {
-                new ToDoSettingsChannelsBuilder(_guildService),
-                new ToDoSettingsCategoriesBuilder(_guildService),
-                new ToDoSettingsPermissionsBuilder(_guildService)
+                new ToDoSettingsChannelsBuilder(),
+                new ToDoSettingsCategoriesBuilder(),
+                new ToDoSettingsPermissionsBuilder()
             };
         }
 
@@ -78,6 +78,8 @@ namespace InnoTasker.Services.ToDo
                 instance.toDoListName = toDoListName;
                 instance.mode = ToDoSettingsInstanceMode.ToDoSettings;
 
+                if (context is not ToDoSettingsContext.New) await instance.GetListData(_guildService);
+
                 MessageContext message = await GetSettingsPage(instance);
 
                 if (instance.message != null)
@@ -92,7 +94,7 @@ namespace InnoTasker.Services.ToDo
             catch (Exception ex)
             {
                 _logger.Log(LogSeverity.Error, this, $"Interaction {interaction.Channel.Id} failed to open ToDoListPage", ex);
-                await CloseInstance(instance, "Error, sorry");
+                await CloseInstance(instance, "There was an error opening this list's settings page");
                 return false;
             }
             return true;
@@ -187,6 +189,22 @@ namespace InnoTasker.Services.ToDo
         public async Task<bool> InstanceExists(ulong instanceID) => toDoSettingsInstances.Exists(x => x.interactionID == instanceID);
 
         public async Task<string> GetCurrentInstanceListName(ulong instanceID) => GetSettingsInstance(instanceID).Result.toDoListName;
+
+        public async Task<bool> SaveInstance(ulong instanceID)
+        {
+            ToDoSettingsInstance instance = await GetSettingsInstance(instanceID);
+            try
+            {
+                await instance.SaveGuildSettings(_guildService);
+            }
+            catch (Exception ex)
+            {
+                await _logger.LogAsync(LogSeverity.Error, this, $"Settings instance {instanceID} failed to save", ex);
+                await CloseInstance(instanceID, "There was an error saving this instance");
+                return false;
+            }
+            return true;
+        }
 
         public async void Shutdown() 
         {

@@ -14,10 +14,12 @@ namespace InnoTasker.Modules
     public class SettingsPagesModule : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly IToDoSettingsService _settingsService;
+        private readonly IToDoListService _toDoService;
 
-        public SettingsPagesModule(IToDoSettingsService settingsService)
+        public SettingsPagesModule(IToDoSettingsService settingsService, IToDoListService toDoService)
         {
             _settingsService = settingsService;
+            _toDoService = toDoService;
         }
 
         [ComponentInteraction("settings-next")]
@@ -31,7 +33,14 @@ namespace InnoTasker.Modules
         [ComponentInteraction("settings-close")]
         public async Task ClosePage()
         {
-            await _settingsService.CloseInstance(Context.Channel.Id);
+            await DeferAsync(true);
+            //Instance will already be closed if there was an error
+            if (await _settingsService.SaveInstance(Context.Channel.Id))
+            {
+                ToDoSettingsInstance instance = await _settingsService.GetSettingsInstance(Context.Channel.Id);
+                await _toDoService.UpdateToDoList(instance.guildID, instance.toDoListName, instance.categoriesRenamed, instance.stagesRenamed);
+                await _settingsService.CloseInstance(Context.Channel.Id);
+            }
             await RespondAsync(ephemeral: true);
         }
 

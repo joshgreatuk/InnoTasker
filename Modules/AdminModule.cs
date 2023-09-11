@@ -124,23 +124,23 @@ namespace InnoTasker.Modules
                     .Build());
             }
 
-            ToDoList list = await GetList();
+            ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
 
             switch (channelType)
             {
                 case ToDoListChannelType.List:
                     {
-                        list.ListChannelID = channel.Id;
+                        instance.toDoChannel = channel.Id;
                         break;
                     }
                 case ToDoListChannelType.Command:
                     {
-                        list.CommandChannelID = channel.Id;
+                        instance.toDoCommandChannel = channel.Id;
                         break;
                     }
                 case ToDoListChannelType.Forum:
                     {
-                        list.ForumChannelID = channel.Id;
+                        instance.toDoForumChannel = channel.Id;
                         break;
                     }
             }
@@ -150,27 +150,26 @@ namespace InnoTasker.Modules
 
         public async Task AddCategory(string categoryName)
         {
-            ToDoList list = await GetList();
-            if (list.Categories.Contains(categoryName))
+            ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
+            if (instance.categoryList.Contains(categoryName))
             {
                 await RespondAsync(ephemeral: true);
                 return;
             }
-            list.Categories.Add(categoryName);
+            instance.categoryList.Add(categoryName);
             await UpdateCurrentSettingsPage();
             await RespondAsync(ephemeral: true);
         }
 
         public async Task RemoveCategory([Autocomplete(typeof(SettingsCategoryAutocomplete))]string categoryName)
         {
-            ToDoList list = await GetList();
-            if (!list.Categories.Contains(categoryName))
+            ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
+            if (!instance.categoryList.Contains(categoryName))
             {
                 await RespondAsync(ephemeral: true);
                 return;
             }
-            list.Categories.Remove(categoryName);
-            await _toDoListService.CategoryRemoved(list, categoryName);
+            instance.categoryList.Remove(categoryName);
 
             await UpdateCurrentSettingsPage();
             await RespondAsync(ephemeral: true);
@@ -178,15 +177,28 @@ namespace InnoTasker.Modules
 
         public async Task RenameCategory([Autocomplete(typeof(SettingsCategoryAutocomplete))] string categoryName, string newName)
         {
-            ToDoList list = await GetList();
-            if (!list.Categories.Contains(categoryName) || list.Categories.Contains(newName))
+            ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
+            if (!instance.categoryList.Contains(categoryName) || instance.categoryList.Contains(newName))
             {
                 await RespondAsync(ephemeral: true);
                 return;
             }
-            list.Categories.Remove(categoryName);
-            list.Categories.Add(newName);
-            await _toDoListService.CategoryRenamed(list, categoryName, newName);
+            instance.categoryList.Remove(categoryName);
+            instance.categoryList.Add(newName);
+
+            if (instance.categoriesRenamed.ContainsKey(categoryName))
+            {
+                instance.categoriesRenamed[categoryName] = newName;
+            }
+            else if (instance.categoriesRenamed.ContainsValue(categoryName))
+            {
+                string key = instance.categoriesRenamed.Where(x => x.Value == categoryName).First().Key;
+                instance.categoriesRenamed[key] = newName;
+            }
+            else
+            {
+                instance.categoriesRenamed.Add(categoryName, newName);
+            }
 
             await UpdateCurrentSettingsPage();
             await RespondAsync(ephemeral: true);
@@ -194,27 +206,26 @@ namespace InnoTasker.Modules
 
         public async Task AddStage(string stageName)
         {
-            ToDoList list = await GetList();
-            if (list.Stages.Contains(stageName))
+            ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
+            if (instance.stageList.Contains(stageName))
             {
                 await RespondAsync(ephemeral: true);
                 return;
             }
-            list.Stages.Add(stageName);
+            instance.stageList.Add(stageName);
             await UpdateCurrentSettingsPage();
             await RespondAsync(ephemeral: true);
         }
 
         public async Task RemoveStage([Autocomplete(typeof(SettingsStageAutocomplete))] string stageName)
         {
-            ToDoList list = await GetList();
-            if (!list.Stages.Contains(stageName))
+            ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
+            if (!instance.stageList.Contains(stageName))
             {
                 await RespondAsync(ephemeral: true);
                 return;
             }
-            list.Stages.Remove(stageName);
-            await _toDoListService.StageRemoved(list, stageName);
+            instance.stageList.Remove(stageName);
 
             await UpdateCurrentSettingsPage();
             await RespondAsync(ephemeral: true);
@@ -222,15 +233,28 @@ namespace InnoTasker.Modules
 
         public async Task RenameStage([Autocomplete(typeof(SettingsStageAutocomplete))] string stageName, string newName)
         {
-            ToDoList list = await GetList();
-            if (!list.Stages.Contains(stageName) || list.Stages.Contains(newName))
+            ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
+            if (!instance.stageList.Contains(stageName) || instance.stageList.Contains(newName))
             {
                 await RespondAsync(ephemeral: true);
                 return;
             }
-            list.Stages.Remove(stageName);
-            list.Stages.Add(newName);
-            await _toDoListService.StageRenamed(list, stageName, newName);
+            instance.stageList.Remove(stageName);
+            instance.stageList.Add(newName);
+
+            if (instance.stagesRenamed.ContainsKey(stageName))
+            {
+                instance.stagesRenamed[stageName] = newName;
+            }
+            else if (instance.stagesRenamed.ContainsValue(stageName))
+            {
+                string key = instance.stagesRenamed.Where(x => x.Value == stageName).First().Key;
+                instance.stagesRenamed[key] = newName;
+            }
+            else
+            { 
+                instance.stagesRenamed.Add(stageName, newName);
+            }
 
             await UpdateCurrentSettingsPage();
             await RespondAsync(ephemeral: true);
@@ -238,41 +262,41 @@ namespace InnoTasker.Modules
 
         public async Task SetUserPermission(IUser user, ListUserPermissions permissions)
         {
-            ToDoList list = await GetList();
-            if (list.UserPermissions.ContainsKey(user.Id))
+            ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
+            if (instance.userPermissions.ContainsKey(user.Id))
             {
                 if (permissions is ListUserPermissions.None)
                 {
-                    list.UserPermissions.Remove(user.Id);
+                    instance.userPermissions.Remove(user.Id);
                 }
                 else
                 {
-                    list.UserPermissions[user.Id] = permissions;
+                    instance.userPermissions[user.Id] = permissions;
                 }
             }
             else if (permissions is not ListUserPermissions.None)
             {
-                list.UserPermissions.Add(user.Id, permissions);
+                instance.userPermissions.Add(user.Id, permissions);
             }
         }
 
         public async Task SetRolePermission(IRole role, ListUserPermissions permissions)
         {
-            ToDoList list = await GetList();
-            if (list.RolePermissions.ContainsKey(role.Id))
+            ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
+            if (instance.rolePermissions.ContainsKey(role.Id))
             {
                 if (permissions is ListUserPermissions.None)
                 {
-                    list.RolePermissions.Remove(role.Id);
+                    instance.rolePermissions.Remove(role.Id);
                 }
                 else
                 {
-                    list.RolePermissions[role.Id] = permissions;
+                    instance.rolePermissions[role.Id] = permissions;
                 }
             }
             else if (permissions is not ListUserPermissions.None)
             {
-                list.RolePermissions.Add(role.Id, permissions);
+                instance.rolePermissions.Add(role.Id, permissions);
             }
         }
 
@@ -284,8 +308,5 @@ namespace InnoTasker.Modules
                 await _toDoSettingsService.UpdateInstance(Context.Interaction, updatedPage);
             }
         }
-
-        public async Task<string> GetListName() => await _toDoSettingsService.GetCurrentInstanceListName(Context.Channel.Id);
-        public async Task<ToDoList> GetList() => await _guildService.GetToDoList(Context.Guild.Id, await GetListName());
     }
 }
