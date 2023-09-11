@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,12 +18,13 @@ namespace InnoTasker.Services.ToDo
     {
         private readonly IGuildService _guildService;
         private readonly IToDoListService _toDoListService;
+        private readonly DiscordSocketClient _client;
 
         private readonly ISettingsPageBuilder toDoListMenuBuilder;
         private readonly List<ISettingsPageBuilder> settingsPages;
         private List<ToDoSettingsInstance> toDoSettingsInstances = new();
 
-        public ToDoSettingsService(ILogger logger, IGuildService guildService, IToDoListService toDoListService) : base(logger)
+        public ToDoSettingsService(ILogger logger, IGuildService guildService, IToDoListService toDoListService, DiscordSocketClient client) : base(logger)
         {
             _guildService = guildService;
             _toDoListService = toDoListService;
@@ -35,6 +37,9 @@ namespace InnoTasker.Services.ToDo
                 new ToDoSettingsCategoriesBuilder(),
                 new ToDoSettingsPermissionsBuilder()
             };
+
+            _client = client;
+            _client.MessageDeleted += HandleMessageDeleted;
         }
 
         public async Task<bool> OpenToDoListPage(SocketInteraction interaction) //Settings page should replace this menu, so should create an instance?
@@ -46,16 +51,7 @@ namespace InnoTasker.Services.ToDo
                 instance.mode = ToDoSettingsInstanceMode.ToDoMenu;
 
                 MessageContext message = await toDoListMenuBuilder.BuildPage(instance);
-
-                if (instance.message != null)
-                {
-                    await UpdateInstance(interaction, message);
-                }
-                else
-                {
-                    //Send the message
-                    instance.message = await interaction.Channel.SendMessageAsync(embed: message.embed, components: message.component.Build());
-                }
+                await UpdateInstance(interaction, message);
             }
             catch (Exception ex)
             {
@@ -80,15 +76,7 @@ namespace InnoTasker.Services.ToDo
                 if (context is not ToDoSettingsContext.New) await instance.GetListData(_guildService);
 
                 MessageContext message = await GetSettingsPage(instance);
-
-                if (instance.message != null)
-                {
-                    await UpdateInstance(interaction, message);
-                }
-                else
-                {
-                    instance.message = await interaction.Channel.SendMessageAsync(embed: message.embed, components: message.component.Build());
-                }
+                await UpdateInstance(interaction, message);
             }
             catch (Exception ex)
             {
@@ -148,6 +136,7 @@ namespace InnoTasker.Services.ToDo
             {
                 instance = new ToDoSettingsInstance(interactionID);
                 toDoSettingsInstances.Add(instance);
+                await _logger.LogAsync(LogSeverity.Debug, this, $"New settings instance opened: {interactionID}");
             }
             return instance;
         }
@@ -188,7 +177,7 @@ namespace InnoTasker.Services.ToDo
                 }
                 else
                 {
-                    await interaction.Channel.SendMessageAsync(embed: context.embed, components: context.component.Build());
+                    instance.message = await interaction.Channel.SendMessageAsync(embed: context.embed, components: context.component.Build());
                 }
             }
             catch (Exception ex)
@@ -251,6 +240,11 @@ namespace InnoTasker.Services.ToDo
             await _guildService.SaveGuild(instance.guildID);
 
             toDoSettingsInstances.Remove(instance);
+        }
+
+        public async Task HandleMessageDeleted(Cacheable<IMessage, ulong> message, Cacheable<IMessageChannel, ulong> messageChannel)
+        {
+            if (await InstanceExists(messageChannel.Id)) await CloseInstance(message.Id);
         }
     }
 }

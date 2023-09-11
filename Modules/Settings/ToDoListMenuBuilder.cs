@@ -31,7 +31,7 @@ namespace InnoTasker.Modules.Settings
             if (instance.toDoListName == String.Empty &&  toDoListEntries.Count > 0) instance.toDoListName = toDoListEntries[0];
             EmbedBuilder embed = new EmbedBuilder().WithTitle("To-Do List Menu")
                 .WithFields(new[] { new EmbedFieldBuilder().WithName($"To-Do Lists:").WithValue(toDoListEntries.Count > 0 ? toDoListDescription : "None") })
-                .WithFooter("You can add a new list with /admin NewToDoList or remove one with /admin DeleteToDoList");
+                .WithFooter("You can add a new list with /admin new-todolist or remove one with /admin delete-todolist");
             ComponentBuilder component = new ComponentBuilder()
                 .WithSelectMenu(new SelectMenuBuilder()
                     .WithCustomId("settings-comp-listselect")

@@ -63,7 +63,7 @@ namespace InnoTasker.Modules
             }
         }
 
-        [SlashCommand("newtodolist", "Open the to-do list creation wizard")]
+        [SlashCommand("new-todolist", "Open the to-do list creation wizard")]
         public async Task NewToDoList(string toDoName)
         {
             await DeferAsync();
@@ -79,7 +79,7 @@ namespace InnoTasker.Modules
             }
         }
 
-        [SlashCommand("deletetodolist", "Delete a to-do list")]
+        [SlashCommand("delete-todolist", "Delete a to-do list")]
         public async Task DeleteToDoList([Autocomplete(typeof(ToDoListAutocomplete))] string toDoName)
         {
             await RespondAsync(ephemeral: true, embed: new EmbedBuilder()
