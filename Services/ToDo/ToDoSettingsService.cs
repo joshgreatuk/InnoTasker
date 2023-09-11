@@ -190,6 +190,7 @@ namespace InnoTasker.Services.ToDo
         }
 
         public async Task<bool> InstanceExists(ulong instanceID) => toDoSettingsInstances.Exists(x => x.interactionID == instanceID);
+        public async Task<bool> InstanceExistsFromMessage(ulong messageID) => toDoSettingsInstances.Exists(x => x.message.Id == messageID);
 
         public async Task<string> GetCurrentInstanceListName(ulong instanceID) => GetSettingsInstance(instanceID).Result.toDoListName;
 
@@ -244,7 +245,7 @@ namespace InnoTasker.Services.ToDo
 
         public async Task HandleMessageDeleted(Cacheable<IMessage, ulong> message, Cacheable<IMessageChannel, ulong> messageChannel)
         {
-            if (await InstanceExists(messageChannel.Id)) await CloseInstance(message.Id);
+            if (await InstanceExistsFromMessage(message.Id)) await CloseInstance(message.Id);
         }
     }
 }

@@ -64,7 +64,14 @@ namespace InnoTasker.Services.Interfaces.ToDo
 
         public async Task SaveGuildSettings(IGuildService guildService)
         {
-            ToDoList listData = await GetListData(guildService);
+            ToDoList? listData = await GetListData(guildService);
+
+            if (listData == null)
+            {
+                listData = new ToDoList();
+                listData.Name = toDoListName;
+                await guildService.AddNewList(guildID, listData);
+            }
 
             listData.ListChannelID = (ulong)toDoChannel;
             listData.CommandChannelID = (ulong)toDoCommandChannel;

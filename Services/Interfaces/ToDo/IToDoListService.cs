@@ -18,6 +18,7 @@ namespace InnoTasker.Services.Interfaces.ToDo
         public Task UpdateToDoItem(ToDoList list, int itemID);
         public Task UpdateToDoItem(ToDoItem item);
 
+        public Task AddToDoList(ulong guildID, ToDoList list);
         public Task DeleteToDoList(ulong guildID, string toDoName);
     }
 }

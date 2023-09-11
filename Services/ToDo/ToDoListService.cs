@@ -44,9 +44,14 @@ namespace InnoTasker.Services.ToDo
 
         }
 
+        public async Task AddToDoList(ulong guildID, ToDoList list)
+        {
+            await _guildService.AddNewList(guildID, list);
+        }
+
         public async Task DeleteToDoList(ulong guildID, string toDoName)
         {
-
+            await _guildService.RemoveList(guildID, toDoName);
         }
     }
 }

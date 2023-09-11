@@ -10,7 +10,7 @@ namespace InnoTasker.Data.ToDo
 
     public class ToDoList
     {
-        public int CurrentID { get; set; }
+        public int CurrentID { get; set; } = 0;
         public string Name { get; set; }
         public ulong ListChannelID { get; set; }
         public ulong CommandChannelID { get; set; }

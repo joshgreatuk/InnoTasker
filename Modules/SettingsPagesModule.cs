@@ -38,6 +38,10 @@ namespace InnoTasker.Modules
             if (await _settingsService.SaveInstance(Context.Channel.Id))
             {
                 ToDoSettingsInstance instance = await _settingsService.GetSettingsInstance(Context.Channel.Id);
+                if (instance.context is ToDoSettingsContext.New)
+                {
+                    
+                }
                 await _toDoService.UpdateToDoList(instance.guildID, instance.toDoListName, instance.categoriesRenamed, instance.stagesRenamed);
                 await _settingsService.CloseInstance(Context.Channel.Id);
             }

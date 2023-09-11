@@ -95,5 +95,24 @@ namespace InnoTasker.Services
         {
             _guildDatabase.Save(guildID);
         }
+
+        public async Task AddNewList(ulong guildID, ToDoList list)
+        {
+            GuildData guildData = _guildDatabase[guildID];
+            guildData.Lists.Add(list);
+            await SaveGuild(guildID);
+        }
+
+        public async Task RemoveList(ulong guildID, string listName) => await RemoveList(guildID, await GetToDoList(guildID, listName));
+        public async Task RemoveList(ulong guildID, ToDoList list)
+        {
+            if (list == null) return;
+            GuildData guildData = _guildDatabase[guildID];
+            if (guildData.Lists.Contains(list))
+            {
+                guildData.Lists.Remove(list);
+            }
+            await SaveGuild(guildID);
+        }
     }
 }
