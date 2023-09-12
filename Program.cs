@@ -17,6 +17,7 @@ namespace InnoTasker
         {
             Program program = new();
             AppDomain.CurrentDomain.ProcessExit += program.ExitSafely;
+            Console.CancelKeyPress += program.ExitSafely;
             return program.MainAsync();
         }
 
@@ -92,9 +93,9 @@ namespace InnoTasker
             await Task.Delay(-1);
         }
 
-        public async void ExitSafely(object? sender, EventArgs eventArgs)
+        public void ExitSafely(object? sender, EventArgs eventArgs)
         {
-            await _logger.LogAsync(LogSeverity.Info, this, "Bot shutdown started");
+            _logger.LogAsync(LogSeverity.Info, this, "Bot shutdown started");
 
             //Save anything that needs saving, etc
             List<IDatabase> toSave = new()
@@ -105,9 +106,9 @@ namespace InnoTasker
             foreach (IDatabase database in toSave) database.Save();
 
             IToDoSettingsService toDoSettingsService = _services.GetRequiredService<IToDoSettingsService>();
-            await toDoSettingsService.Shutdown();
+            toDoSettingsService.Shutdown();
 
-            await _logger.LogAsync(LogSeverity.Info, this, "InnoTasker has shutdown successfully <3");
+            _logger.LogAsync(LogSeverity.Info, this, "InnoTasker has shutdown successfully <3");
             _logger.Shutdown();
         }
 
