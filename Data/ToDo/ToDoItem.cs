@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Discord;
+using Discord.Rest;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,8 +21,10 @@ namespace InnoTasker.Data.ToDo
 
         public List<ulong> AssignedUsers { get; set; } = new();
 
-        public ulong? ForumPostID { get; set; }
-        public ulong? ForumMessageID { get; set; }
+        public IThreadChannel? ForumPost { get; set; }
+        public IUserMessage? StatusMessage { get; set; }
+
+        public IUserMessage? SorryMessage { get; set; }
 
         public string? CachedToDoEntry { get; set; }
         //Custom fields

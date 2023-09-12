@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using InnoTasker.Data;
+using InnoTasker.Data.ToDo;
 using InnoTasker.Modules.Settings;
 using InnoTasker.Services.Interfaces;
 using InnoTasker.Services.Interfaces.ToDo;
@@ -17,17 +18,15 @@ namespace InnoTasker.Services.ToDo
     public class ToDoSettingsService : InnoServiceBase, IToDoSettingsService
     {
         private readonly IGuildService _guildService;
-        private readonly IToDoListService _toDoListService;
         private readonly DiscordSocketClient _client;
 
         private readonly ISettingsPageBuilder toDoListMenuBuilder;
         private readonly List<ISettingsPageBuilder> settingsPages;
         private List<ToDoSettingsInstance> toDoSettingsInstances = new();
 
-        public ToDoSettingsService(ILogger logger, IGuildService guildService, IToDoListService toDoListService, DiscordSocketClient client) : base(logger)
+        public ToDoSettingsService(ILogger logger, IGuildService guildService, DiscordSocketClient client) : base(logger)
         {
             _guildService = guildService;
-            _toDoListService = toDoListService;
 
             //Add settings pages
             toDoListMenuBuilder = new ToDoListMenuBuilder(_guildService, this);
@@ -40,6 +39,7 @@ namespace InnoTasker.Services.ToDo
 
             _client = client;
             _client.MessageDeleted += HandleMessageDeleted;
+            _client.ChannelDestroyed += HandleChannelDeleted;
         }
 
         public async Task<bool> OpenToDoListPage(SocketInteraction interaction) //Settings page should replace this menu, so should create an instance?
@@ -212,6 +212,7 @@ namespace InnoTasker.Services.ToDo
 
         public async Task Shutdown() 
         {
+            await _logger.LogAsync(LogSeverity.Info, this, $"Shutting down");
             //Close all settings instances and leave a message saying sorry :P
             foreach (ToDoSettingsInstance instance in toDoSettingsInstances.ToList())
             {
@@ -249,6 +250,18 @@ namespace InnoTasker.Services.ToDo
         public async Task HandleMessageDeleted(Cacheable<IMessage, ulong> message, Cacheable<IMessageChannel, ulong> messageChannel)
         {
             if (await InstanceExistsFromMessage(message.Id)) await CloseInstance(messageChannel.Id);
+        }
+
+        public async Task HandleChannelDeleted(SocketChannel channel)
+        {
+            ToDoList? list = await _guildService.GetToDoListFromChannel(channel.Id);
+            if (list != null)
+            {
+                if (list.ListChannel == channel) list.ListChannel = null;
+                if (list.CommandChannel == channel) list.CommandChannel = null;
+                if (list.ForumChannel == channel) list.ForumChannel = null;
+                await _guildService.SaveGuild((await _guildService.GetGuildDataFromList(list)).ID);
+            }
         }
     }
 }

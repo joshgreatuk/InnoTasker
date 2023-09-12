@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Discord;
+using Discord.Rest;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,15 +14,15 @@ namespace InnoTasker.Data.ToDo
     {
         public int CurrentID { get; set; } = 0;
         public string Name { get; set; }
-        public ulong ListChannelID { get; set; }
-        public ulong CommandChannelID { get; set; }
-        public ulong? ForumChannelID { get; set; }
+        public ITextChannel ListChannel { get; set; }
+        public ITextChannel CommandChannel { get; set; }
+        public IForumChannel? ForumChannel { get; set; }
 
         public List<string> Categories { get; set; } = new();
         public List<string> Stages { get; set; } = new();
 
-        public ulong MessageChannel { get; set; } = new();
-        public ulong MessageID { get; set; } = new();
+        public ITextChannel? MessageChannel { get; set; }
+        public IUserMessage? Message { get; set; }
         public List<ToDoItem> Items { get; set; } = new();
 
         public Dictionary<ulong, ListUserPermissions> UserPermissions { get; set; } = new();

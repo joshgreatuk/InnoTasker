@@ -8,6 +8,7 @@ using InnoTasker.Services.Interfaces;
 using InnoTasker.Services.Interfaces.ToDo;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Diagnostics;
 
 namespace InnoTasker
 {
@@ -17,6 +18,7 @@ namespace InnoTasker
         {
             Program program = new();
             AppDomain.CurrentDomain.ProcessExit += program.ExitSafely;
+            AppDomain.CurrentDomain.UnhandledException += program.ExitSafely;
             Console.CancelKeyPress += program.ExitSafely;
             return program.MainAsync();
         }
@@ -27,8 +29,12 @@ namespace InnoTasker
         private readonly IServiceProvider _services;
         private readonly ILogger _logger;
 
+        private readonly Stopwatch programTimer;
+
         public Program()
         {
+            programTimer = new Stopwatch();
+            programTimer.Start();
             _services = BuildServiceProvider();
             _logger = _services.GetRequiredService<ILogger>();
         }
@@ -88,14 +94,20 @@ namespace InnoTasker
             await _services.GetRequiredService<IToDoListService>().InitService();
             await _services.GetRequiredService<IToDoForumService>().InitService();
 
-            await _logger.LogAsync(LogSeverity.Info, this, $"InnoTasker Initialized! :)");
+            programTimer.Stop();
+            await _logger.LogAsync(LogSeverity.Info, this, $"InnoTasker Initialized in {programTimer.ElapsedMilliseconds}ms! :)");
 
             await Task.Delay(-1);
         }
 
         public void ExitSafely(object? sender, EventArgs eventArgs)
         {
+            programTimer.Restart();
             _logger.LogAsync(LogSeverity.Info, this, "Bot shutdown started");
+
+            _services.GetRequiredService<IToDoSettingsService>().Shutdown();
+            _services.GetRequiredService<IToDoListService>().Shutdown();
+            _services.GetRequiredService<IToDoForumService>().Shutdown();
 
             //Save anything that needs saving, etc
             List<IDatabase> toSave = new()
@@ -105,10 +117,8 @@ namespace InnoTasker
             };
             foreach (IDatabase database in toSave) database.Save();
 
-            IToDoSettingsService toDoSettingsService = _services.GetRequiredService<IToDoSettingsService>();
-            toDoSettingsService.Shutdown();
-
-            _logger.LogAsync(LogSeverity.Info, this, "InnoTasker has shutdown successfully <3");
+            programTimer.Stop();
+            _logger.LogAsync(LogSeverity.Info, this, $"InnoTasker has shutdown successfully in {programTimer.ElapsedMilliseconds}ms <3");
             _logger.Shutdown();
         }
 

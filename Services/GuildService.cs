@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 using InnoTasker.Data;
 using InnoTasker.Data.Databases;
@@ -74,21 +75,30 @@ namespace InnoTasker.Services
             await _logger.LogAsync(LogSeverity.Debug, this, $"Left guild '{guildID}'");
         }
 
-        public async Task<GuildData> GetGuildData(ulong guildID)
-        {
-            return _guildDatabase[guildID];
-        }
+        public async Task<GuildData> GetGuildData(ulong guildID) => _guildDatabase[guildID];
+        public async Task<GuildData?> GetGuildDataFromList(ToDoList list) =>
+            _guildDatabase.Values.FirstOrDefault(x => x.Lists.Contains(list));
 
         public async Task<ToDoList> GetToDoList(ulong guildID, string listName)
         {
             return await GetGuildData(guildID).Result.GetToDoList(listName);
         }
 
+        public async Task<ToDoList?> GetToDoListFromChannel(ulong channelID)
+        {
+            return _guildDatabase.Values.SelectMany(x => x.Lists)
+                .FirstOrDefault(x => x.ListChannel.Id == channelID
+                || x.CommandChannel.Id == channelID
+                || (x.ForumChannel != null && x.ForumChannel.Id == channelID)
+                || x.Items.Any(x => x.ForumPost != null && x.ForumPost.Id == channelID));
+        }
+
         public async Task<ToDoList?> GetToDoListFromChannel(ulong guildID, ulong channelID)
         {
-            return GetGuildData(guildID).Result.Lists.FirstOrDefault(x => x.ListChannelID == channelID 
-                || x.CommandChannelID == channelID 
-                || x.ForumChannelID == channelID);
+            return GetGuildData(guildID).Result.Lists.FirstOrDefault(x => x.ListChannel.Id == channelID 
+                || x.CommandChannel.Id == channelID 
+                || (x.ForumChannel != null && x.ForumChannel.Id == channelID)
+                || x.Items.Any(x => x.ForumPost != null && x.ForumPost.Id  == channelID));
         }
 
         public async Task SaveGuild(ulong guildID)
@@ -114,5 +124,10 @@ namespace InnoTasker.Services
             }
             await SaveGuild(guildID);
         }
+
+        public async Task<List<IUserMessage>> GetListMessages() =>
+            _guildDatabase.Values.SelectMany(x => x.Lists.Where(x => x.Message != null).Select(x => x.Message)).ToList();
+
+        public async Task<List<GuildData>> GetGuildDataList() => _guildDatabase.Values.ToList();
     }
 }

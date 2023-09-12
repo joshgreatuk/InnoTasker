@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
 using InnoTasker.Data;
+using InnoTasker.Data.ToDo;
 using InnoTasker.Services.Interfaces.ToDo;
 using System;
 using System.Collections.Generic;
@@ -34,6 +35,7 @@ namespace InnoTasker.Modules
         [ComponentInteraction("settings-close")]
         public async Task ClosePage()
         {
+            await DeferAsync();
             //Instance will already be closed if there was an error
             if (await _settingsService.SaveInstance(Context.Channel.Id))
             {
@@ -45,7 +47,7 @@ namespace InnoTasker.Modules
                 await _toDoService.UpdateToDoList(instance.guildID, instance.toDoListName, instance.categoriesRenamed, instance.stagesRenamed);
                 await _settingsService.CloseInstance(Context.Channel.Id);
             }
-            await RespondAsync("Done!");
+            await FollowupAsync("Done!");
             await DeleteOriginalResponseAsync();
         }
 

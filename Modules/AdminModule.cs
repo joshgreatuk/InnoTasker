@@ -132,19 +132,19 @@ namespace InnoTasker.Modules
                 case ToDoListChannelType.List:
                     {
                         if (channel != null && channel.GetChannelType() is not ChannelType.Text) break;
-                        instance.toDoChannel = channel != null ? channel.Id : null;
+                        instance.toDoChannel = channel != null ? (ITextChannel)channel : null;
                         break;
                     }
                 case ToDoListChannelType.Command:
                     {
                         if (channel != null && channel.GetChannelType() is not ChannelType.Text) break;
-                        instance.toDoCommandChannel = channel != null ? channel.Id : null;
+                        instance.toDoCommandChannel = channel != null ? (ITextChannel)channel : null;
                         break;
                     }
                 case ToDoListChannelType.Forum:
                     {
                         if (channel != null && channel.GetChannelType() is not ChannelType.Forum) break;
-                        instance.toDoForumChannel = channel != null ? channel.Id : null;
+                        instance.toDoForumChannel = channel != null ? (IForumChannel)channel : null;
                         break;
                     }
             }

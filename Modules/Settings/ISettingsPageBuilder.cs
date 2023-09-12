@@ -1,6 +1,6 @@
 ﻿using Discord.WebSocket;
 using InnoTasker.Data;
-using InnoTasker.Services.Interfaces.ToDo;
+using InnoTasker.Data.ToDo;
 using System;
 using System.Collections.Generic;
 using System.Linq;

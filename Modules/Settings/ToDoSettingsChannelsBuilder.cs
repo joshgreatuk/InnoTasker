@@ -2,8 +2,8 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using InnoTasker.Data;
+using InnoTasker.Data.ToDo;
 using InnoTasker.Services.Interfaces;
-using InnoTasker.Services.Interfaces.ToDo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,9 +17,9 @@ namespace InnoTasker.Modules.Settings
         public async Task<MessageContext> BuildPage(ToDoSettingsInstance instance)
         {
             List<string> entries = new();
-            entries.Add($"**To-Do list channel:** {(instance.toDoChannel != null ? MentionUtils.MentionChannel((ulong)instance.toDoChannel) : "None (Required)")}");
-            entries.Add($"**To-Do commands channel:** {(instance.toDoCommandChannel != null ? MentionUtils.MentionChannel((ulong)instance.toDoCommandChannel) : "None (Required)")}");
-            entries.Add($"**To-Do task forum channel:** {(instance.toDoForumChannel != null ? MentionUtils.MentionChannel((ulong)instance.toDoForumChannel) : "None (Optional)")}");
+            entries.Add($"**To-Do list channel:** {(instance.toDoChannel != null ? MentionUtils.MentionChannel(instance.toDoChannel.Id) : "None (Required)")}");
+            entries.Add($"**To-Do commands channel:** {(instance.toDoCommandChannel != null ? MentionUtils.MentionChannel(instance.toDoCommandChannel.Id) : "None (Required)")}");
+            entries.Add($"**To-Do task forum channel:** {(instance.toDoForumChannel != null ? MentionUtils.MentionChannel(instance.toDoForumChannel.Id) : "None (Optional)")}");
 
             EmbedBuilder embed = new EmbedBuilder()
                 .WithTitle($"{instance.toDoListName} settings: Channels")

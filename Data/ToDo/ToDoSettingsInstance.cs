@@ -1,17 +1,18 @@
-﻿using Discord.Rest;
+﻿using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 using InnoTasker.Data;
-using InnoTasker.Data.ToDo;
+using InnoTasker.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InnoTasker.Services.Interfaces.ToDo
+namespace InnoTasker.Data.ToDo
 {
     public enum ToDoSettingsContext { New, Existing }
-    public enum ToDoSettingsInstanceMode { ToDoMenu, ToDoSettings } 
+    public enum ToDoSettingsInstanceMode { ToDoMenu, ToDoSettings }
 
     public class ToDoSettingsInstance
     {
@@ -28,9 +29,9 @@ namespace InnoTasker.Services.Interfaces.ToDo
         public int pageIndex = 0;
 
         //Channels Page
-        public ulong? toDoChannel;
-        public ulong? toDoCommandChannel;
-        public ulong? toDoForumChannel;
+        public ITextChannel? toDoChannel;
+        public ITextChannel? toDoCommandChannel;
+        public IForumChannel? toDoForumChannel;
 
         //Categories Page
         public List<string> categoryList = new();
@@ -51,9 +52,9 @@ namespace InnoTasker.Services.Interfaces.ToDo
         {
             ToDoList listData = await GetListData(guildService);
 
-            toDoChannel = listData.ListChannelID;
-            toDoCommandChannel = listData.CommandChannelID;
-            toDoForumChannel = listData.ForumChannelID;
+            toDoChannel = listData.ListChannel;
+            toDoCommandChannel = listData.CommandChannel;
+            toDoForumChannel = listData.ForumChannel;
 
             categoryList = listData.Categories;
             stageList = listData.Stages;
@@ -73,9 +74,9 @@ namespace InnoTasker.Services.Interfaces.ToDo
                 await guildService.AddNewList(guildID, listData);
             }
 
-            listData.ListChannelID = (ulong)toDoChannel;
-            listData.CommandChannelID = (ulong)toDoCommandChannel;
-            listData.ForumChannelID = toDoForumChannel;
+            listData.ListChannel = toDoChannel;
+            listData.CommandChannel = toDoCommandChannel;
+            listData.ForumChannel = toDoForumChannel;
 
             listData.Categories = categoryList;
             listData.Stages = stageList;
