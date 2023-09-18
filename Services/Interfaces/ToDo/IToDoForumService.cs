@@ -22,7 +22,7 @@ namespace InnoTasker.Services.Interfaces.ToDo
         public Task UnCompleteTaskPost(ToDoItem item);
 
         public Task UpdateStatusMessage(ToDoItem item);
-        public Task<IUserMessage> PostUpdateMessage(ToDoItem item, string title, string message);
+        public Task<IUserMessage> ProcessUpdateMessages(ToDoItem item);
         
         public Task Shutdown();
     }

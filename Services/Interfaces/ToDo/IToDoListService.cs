@@ -11,15 +11,15 @@ namespace InnoTasker.Services.Interfaces.ToDo
     {
         public Task InitService();
 
-        public Task UpdateToDoList(ulong guildId, string listName, Dictionary<string, string> renamedCategories = null, Dictionary<string, string> renamedStages = null);
-        public Task UpdateToDoList(ToDoList list, Dictionary<string, string> renamedCategories=null, Dictionary<string,string> renamedStages=null);
+        public Task UpdateToDoList(ulong guildID, string listName, Dictionary<string, string> renamedCategories = null, Dictionary<string, string> renamedStages = null);
+        public Task UpdateToDoList(ulong guildID, ToDoList list, Dictionary<string, string> renamedCategories=null, Dictionary<string,string> renamedStages=null);
 
         public Task UpdateToDoListMessage(ulong guildID, string listName);
         public Task UpdateToDoListMessage(ToDoList list);
 
         public Task UpdateToDoItem(ulong guildID, string listName, int itemID);
         public Task UpdateToDoItem(ulong guildID, ToDoList list, int itemID);
-        public Task UpdateToDoItem(ulong guildID, ToDoList list, ToDoItem item);
+        public Task UpdateToDoItem(ulong guildID, ToDoList list, ToDoItem item, bool updateMessage=true);
 
         public Task AddToDoList(ulong guildID, ToDoList list);
         public Task DeleteToDoList(ulong guildID, string toDoName);

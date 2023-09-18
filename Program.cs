@@ -105,9 +105,11 @@ namespace InnoTasker
             programTimer.Restart();
             _logger.LogAsync(LogSeverity.Info, this, "Bot shutdown started");
 
-            _services.GetRequiredService<IToDoSettingsService>().Shutdown();
-            _services.GetRequiredService<IToDoListService>().Shutdown();
-            _services.GetRequiredService<IToDoForumService>().Shutdown();
+            Task.WaitAll(
+                _services.GetRequiredService<IToDoSettingsService>().Shutdown(),
+                _services.GetRequiredService<IToDoListService>().Shutdown(),
+                _services.GetRequiredService<IToDoForumService>().Shutdown()
+            );
 
             //Save anything that needs saving, etc
             List<IDatabase> toSave = new()

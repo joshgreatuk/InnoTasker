@@ -84,7 +84,7 @@ namespace InnoTasker.Services.ToDo
 
         }
 
-        public async Task<IUserMessage> PostUpdateMessage(ToDoItem item, string title, string message)
+        public async Task<IUserMessage> ProcessUpdateMessages(ToDoItem item)
         {
             throw new NotImplementedException();
         }

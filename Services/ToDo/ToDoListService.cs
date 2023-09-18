@@ -31,17 +31,83 @@ namespace InnoTasker.Services.ToDo
             await _logger.LogAsync(LogSeverity.Info, this, $"Started initialization");
             foreach (GuildData guild in await _guildService.GetGuildDataList())
             {
-
+                foreach (ToDoList list in guild.Lists)
+                {
+                    await UpdateToDoList(guild.ID, list);
+                }
             }
             await _logger.LogAsync(LogSeverity.Info, this, "Initialized!");
         }
 
         public async Task UpdateToDoList(ulong guildID, string listName, Dictionary<string, string> renamedCategories = null, Dictionary<string, string> renamedStages = null) => 
-            await UpdateToDoList(await _guildService.GetToDoList(guildID, listName), renamedCategories, renamedStages);
-        public async Task UpdateToDoList(ToDoList list, Dictionary<string, string> renamedCategories=null, Dictionary<string, string> renamedStages=null)
+            await UpdateToDoList(guildID, await _guildService.GetToDoList(guildID, listName), renamedCategories, renamedStages);
+        public async Task UpdateToDoList(ulong guildID, ToDoList list, Dictionary<string, string> renamedCategories=null, Dictionary<string, string> renamedStages=null)
         {
             //Check for removed and renamed categories, check renamed before removed
+            foreach (ToDoItem item in list.Items)
+            {
+                bool itemChanged = false;
+                Queue<string> toRemove = new();
 
+                if (renamedCategories != null)
+                {
+                    for (int i = 0; i < item.Categories.Count; i++)
+                    {
+                        if (renamedCategories.TryGetValue(item.Categories[i], out string newCat))
+                        {
+                            item.ItemUpdateQueue.Enqueue(new ItemUpdate(ItemUpdateType.CategoryRenamed, $"{item.Categories[i]}:{newCat}"));
+                            item.Categories[i] = newCat;
+                            itemChanged = true;
+                        }
+
+                        if (!list.Categories.Contains(item.Categories[i]))
+                        {
+                            item.ItemUpdateQueue.Enqueue(new ItemUpdate(ItemUpdateType.CategoryRemoved, item.Categories[i]));
+                            toRemove.Enqueue(item.Categories[i]);
+                            itemChanged = true;
+                        }
+                    }
+
+                    foreach (string remove in toRemove)
+                    {
+                        item.Categories.Remove(remove);
+                    }
+
+                    toRemove.Clear();
+                }
+
+                if (renamedStages != null)
+                {
+                    for (int i = 0; i < item.Stages.Count; i++)
+                    {
+                        if (renamedStages.TryGetValue(item.Stages[i], out string newStage))
+                        {
+                            item.ItemUpdateQueue.Enqueue(new ItemUpdate(ItemUpdateType.StageRenamed, $"{item.Categories[i]}:{newStage}"));
+                            item.Stages[i] = newStage;
+                            itemChanged = true;
+                        }
+
+                        if (!list.Stages.Contains(item.Stages[i]))
+                        {
+                            item.ItemUpdateQueue.Enqueue(new ItemUpdate(ItemUpdateType.StageRemoved, item.Stages[i]));
+                            toRemove.Enqueue(item.Stages[i]);
+                            itemChanged = true;
+                        }
+                    }
+
+                    foreach (string remove in toRemove)
+                    {
+                        item.Stages.Remove(remove);
+                    }
+                }
+
+                if (item.CachedToDoEntry == null || itemChanged)
+                {
+                    await UpdateToDoItem(guildID, list, item, false);
+                }
+            }
+
+            await _guildService.SaveGuild(guildID);
             await UpdateToDoListMessage(list);
         }
 
@@ -94,22 +160,74 @@ namespace InnoTasker.Services.ToDo
             await UpdateToDoItem(guildID, await _guildService.GetToDoList(guildID, listName), itemID);
         public async Task UpdateToDoItem(ulong guildID, ToDoList list, int itemID) => 
             await UpdateToDoItem(guildID, list, await list.GetToDoItem(itemID));
-        public async Task UpdateToDoItem(ulong guildID, ToDoList list, ToDoItem item)
+        public async Task UpdateToDoItem(ulong guildID, ToDoList list, ToDoItem item, bool updateMessage = true)
         {
             //Create to-do item message
+            List<string> entries = new();
+            entries.Add($"#{item.ID}");
+            entries.Add($"{item.Name}");
+            entries.Add($"{string.Join(", ", item.Stages)}");
+            entries.Add($"{string.Join(", ", item.Categories)}");
+            if (await _toDoForumService.IsListForumEnabled(list) && item.ForumPost != null)
+            {
+                entries.Add($"{MentionUtils.MentionChannel(item.ForumPost.Id)}");
+            }
+
+            item.CachedToDoEntry = string.Join(" | ", entries);
+
+            if (item.IsComplete)
+            {
+                item.CachedToDoEntry = "~~" + item.CachedToDoEntry + "~~";
+            }
 
             await _guildService.SaveGuild(guildID);
-            await UpdateToDoListMessage(list);
+
+            if (updateMessage) await UpdateToDoListMessage(list);
 
             if (await _toDoForumService.IsListForumEnabled(list))
             {
-                
+                await _toDoForumService.ProcessUpdateMessages(item);
             }
         }
 
         public async Task<List<Embed>> CreateToDoEmbed(ToDoList list)
         {
-            List<Embed> embeds = new();
+            List<string> infoItems = new()
+            {
+                $"**Name:** {list.Name}",
+                $"**Stages:** {string.Join(", ", list.Stages)}",
+                $"**Categories:** {string.Join(", ", list.Categories)}",
+                $"**Item count:** {list.Items.Count}",
+                $"**Completed items:** {list.Items.Count(x => x.IsComplete)}"
+            };
+
+            //Default sorting is by:
+            //1. Completed
+            //2. Stage
+            //3. Category
+            //4. ID
+
+            list.Items.OrderBy(x => x.IsComplete).ThenBy(x => x.Stages.OrderBy(x => list.Stages.IndexOf(x)).First())
+                .ThenBy(x => x.Categories.OrderBy(x => list.Categories.IndexOf(x)).First()).ThenBy(x => x.ID);
+
+            List<string> itemMessages = list.Items.Select(x => x.CachedToDoEntry).ToList();
+
+            //List info as first embed
+            //Subsequent embeds must be split by items limit
+            List<Embed> embeds = new()
+            {
+                new EmbedBuilder()
+                .WithTitle($"To-Do list {list.Name} info")
+                .WithDescription(string.Join("\n", infoItems))
+                .WithCurrentTimestamp()
+                .Build(),
+
+                new EmbedBuilder()
+                .WithTitle($"To-Do list {list.Name}")
+                .WithDescription(string.Join("\n", itemMessages))
+                .WithCurrentTimestamp()
+                .Build()
+            };
 
             return embeds;
         }
@@ -117,7 +235,7 @@ namespace InnoTasker.Services.ToDo
         public async Task AddToDoList(ulong guildID, ToDoList list)
         {
             await _guildService.AddNewList(guildID, list);
-            await UpdateToDoList(list);
+            await UpdateToDoList(guildID, list);
         }
 
         public async Task DeleteToDoList(ulong guildID, string toDoName)

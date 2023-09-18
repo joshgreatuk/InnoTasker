@@ -27,6 +27,8 @@ namespace InnoTasker.Data.ToDo
         public IUserMessage? SorryMessage { get; set; }
 
         public string? CachedToDoEntry { get; set; }
+
+        public Queue<ItemUpdate> ItemUpdateQueue { get; set; } = new();
         //Custom fields
     }
 }
