@@ -15,6 +15,6 @@ namespace InnoTasker.Modules.Settings
 
         public Task<MessageContext?> HandleInteraction(ToDoSettingsInstance instance, SocketInteraction interaction);
 
-        public Task<bool> CanProceed(ToDoSettingsInstance instance); //TO-DO: Ensure this is built into settings page builders
+        public Task<bool> CanProceed(ToDoSettingsInstance instance);
     }
 }

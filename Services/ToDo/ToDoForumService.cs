@@ -89,6 +89,20 @@ namespace InnoTasker.Services.ToDo
             await item.ForumPost.ModifyAsync(x => { x.Locked = false; x.Archived = false; });
         }
 
+        public async Task AddUserTaskPost(ToDoItem item, IGuildUser user)
+        {
+            if (!await DoesTaskPostExist(item)) return;
+
+            await item.ForumPost.AddUserAsync(user);
+        }
+
+        public async Task RemoveUserTaskPost(ToDoItem item, IGuildUser user)
+        {
+            if (!await DoesTaskPostExist(item)) return;
+
+            await item.ForumPost.RemoveUserAsync(user);
+        }
+
         public async Task UpdateStatusMessage(ToDoItem item)
         {
             if (!await DoesTaskPostExist(item)) return;

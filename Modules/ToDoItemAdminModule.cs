@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Modules
 {
-    [Group("to-do", "Commands relating to a to-do list")]
-    public class ToDoModule
+    [Group("to-do-item-admin", "Admin commands for a task inside it's forum post")]
+    public class ToDoItemAdminModule : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly IToDoUpdateService _updateService;
 
-        public ToDoModule(IToDoUpdateService updateService)
+        public ToDoItemAdminModule(IToDoUpdateService updateService)
         {
             _updateService = updateService;
         }

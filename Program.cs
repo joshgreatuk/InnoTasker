@@ -9,6 +9,8 @@ using InnoTasker.Services.Interfaces.ToDo;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Diagnostics;
+using InnoTasker.Services.Interfaces.Admin;
+using InnoTasker.Services.Admin;
 
 namespace InnoTasker
 {
@@ -77,6 +79,9 @@ namespace InnoTasker
                 .AddSingleton<IToDoSettingsService, ToDoSettingsService>()
                 .AddSingleton<IToDoUpdateService, ToDoUpdateService>()
 
+                //Load AdminServiceData
+                .AddSingleton<IAdminService, AdminService>()
+
                 .BuildServiceProvider();
         }
 
@@ -91,10 +96,10 @@ namespace InnoTasker
             await client.LoginAsync(TokenType.Bot, IsDebug() ? s_debugBotToken : s_releaseBotToken);
             await client.StartAsync();
 
-            Task.WaitAll
-            (
+            Task.WaitAll(
                 _services.GetRequiredService<IToDoListService>().InitService(),
-                _services.GetRequiredService<IToDoForumService>().InitService()
+                _services.GetRequiredService<IToDoForumService>().InitService(),
+                _services.GetRequiredService<IAdminService>().Init()
             );
 
             programTimer.Stop();
@@ -111,7 +116,8 @@ namespace InnoTasker
             Task.WaitAll(
                 _services.GetRequiredService<IToDoSettingsService>().Shutdown(),
                 _services.GetRequiredService<IToDoListService>().Shutdown(),
-                _services.GetRequiredService<IToDoForumService>().Shutdown()
+                _services.GetRequiredService<IToDoForumService>().Shutdown(),
+                _services.GetRequiredService<IAdminService>().Shutdown()
             );
 
             //Save anything that needs saving, etc
@@ -121,6 +127,8 @@ namespace InnoTasker
                 _services.GetRequiredService<UserEmojiDatabase>()
             };
             foreach (IDatabase database in toSave) database.Save();
+
+            //TO-DO: Save AdminService data
 
             programTimer.Stop();
             _logger.LogAsync(LogSeverity.Info, this, $"InnoTasker has shutdown successfully in {programTimer.ElapsedMilliseconds}ms <3");
