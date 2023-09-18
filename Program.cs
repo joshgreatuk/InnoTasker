@@ -91,8 +91,11 @@ namespace InnoTasker
             await client.LoginAsync(TokenType.Bot, IsDebug() ? s_debugBotToken : s_releaseBotToken);
             await client.StartAsync();
 
-            await _services.GetRequiredService<IToDoListService>().InitService();
-            await _services.GetRequiredService<IToDoForumService>().InitService();
+            Task.WaitAll
+            (
+                _services.GetRequiredService<IToDoListService>().InitService(),
+                _services.GetRequiredService<IToDoForumService>().InitService()
+            );
 
             programTimer.Stop();
             await _logger.LogAsync(LogSeverity.Info, this, $"InnoTasker Initialized in {programTimer.ElapsedMilliseconds}ms! :)");

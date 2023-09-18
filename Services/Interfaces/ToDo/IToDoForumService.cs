@@ -17,7 +17,7 @@ namespace InnoTasker.Services.Interfaces.ToDo
 
         public Task<bool> DoesTaskPostExist(ToDoItem item);
 
-        public Task CreateTaskPost(ToDoItem item);
+        public Task CreateTaskPost(ToDoList list, ToDoItem item);
         public Task CompleteTaskPost(ToDoItem item);
         public Task UnCompleteTaskPost(ToDoItem item);
 

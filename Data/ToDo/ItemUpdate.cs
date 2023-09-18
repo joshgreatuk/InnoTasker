@@ -9,6 +9,7 @@ namespace InnoTasker.Data.ToDo
 {
     public enum ItemUpdateType
     {
+        BotShutdown,
         StatusMessageAdded,
 
         UserAdded,
@@ -38,6 +39,7 @@ namespace InnoTasker.Data.ToDo
 
         private static readonly Dictionary<ItemUpdateType, string> updateMessages = new()
         {
+            { ItemUpdateType.BotShutdown, "The bot is down for maintenence, sorry for the inconvenience <3" },
             { ItemUpdateType.StatusMessageAdded, "Status message added {channelMention}" },
 
             { ItemUpdateType.UserAdded, "User {userMention} added to task" },

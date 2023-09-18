@@ -24,9 +24,13 @@ namespace InnoTasker.Services.ToDo
         {
             //Update forum status messages
             await _logger.LogAsync(LogSeverity.Info, this, $"Started initialization");
-            foreach (GuildData guild in await _guildService.GetGuildDataList())
+            foreach (ToDoItem item in (await _guildService.GetGuildDataList()).SelectMany(x => x.Lists.SelectMany(x => x.Items)))
             {
-                //Remove sorry messages
+                if (item.SorryMessage != null)
+                {
+                    await item.SorryMessage.DeleteAsync();
+                    item.SorryMessage = null;
+                }
             }
             await _logger.LogAsync(LogSeverity.Info, this, "Initialized!");
         }
@@ -62,31 +66,70 @@ namespace InnoTasker.Services.ToDo
             return true;
         }
 
-        public async Task CreateTaskPost(ToDoItem item)
+        public async Task CreateTaskPost(ToDoList list, ToDoItem item)
         {
             if (await DoesTaskPostExist(item)) return;
+            if (await IsListForumEnabled(list)) return;
 
-
+            item.ForumPost = await list.ForumChannel.CreatePostAsync($"#{item.ID} | {item.Name}");
+            await UpdateStatusMessage(item);
         }
 
         public async Task CompleteTaskPost(ToDoItem item)
         {
+            if (!await DoesTaskPostExist(item)) return;
 
+            await item.ForumPost.ModifyAsync(x => { x.Locked = true; x.Archived = true; });
         }
 
         public async Task UnCompleteTaskPost(ToDoItem item)
         {
+            if (!await DoesTaskPostExist(item)) return;
 
+            await item.ForumPost.ModifyAsync(x => { x.Locked = false; x.Archived = false; });
         }
 
         public async Task UpdateStatusMessage(ToDoItem item)
         {
+            if (!await DoesTaskPostExist(item)) return;
 
+            List<string> statusFields = new()
+            {
+                $"ID: {item.ID}",
+                $"Name: {item.Name}",
+                $"Stages: {string.Join(", ", item.Stages)}",
+                $"Categories: {string.Join(", ", item.Categories)}",
+                $"Assigned users: {string.Join(", ", item.AssignedUsers.Select(x => MentionUtils.MentionUser(x)))}",
+            };
+
+            Embed statusMessage = new EmbedBuilder()
+                .WithTitle($"#{item.ID} | {item.Name}")
+                .WithDescription(string.Join("\n", statusFields))
+                .Build();
+
+            try
+            {
+                await item.StatusMessage.ModifyAsync(x => x.Embed = statusMessage);
+            }
+            catch //Message doesnt exist, create and pin it
+            {
+                item.StatusMessage = await item.ForumPost.SendMessageAsync(embed: statusMessage);
+                await item.StatusMessage.PinAsync();
+            }
         }
 
         public async Task<IUserMessage> ProcessUpdateMessages(ToDoItem item)
         {
-            throw new NotImplementedException();
+            if (!await DoesTaskPostExist(item)) return null;
+
+            //Get message from ItemUpdate.GetMessage()
+            IUserMessage message = await item.ForumPost.SendMessageAsync(embed: new EmbedBuilder()
+                .WithTitle($"Task Updates:")
+                .WithDescription(string.Join("\n", item.ItemUpdateQueue.Select(x => x.GetMessage())))
+                .Build());
+            
+            item.ItemUpdateQueue.Clear();
+            return message;
         }
 
         public async Task Shutdown()
@@ -96,7 +139,8 @@ namespace InnoTasker.Services.ToDo
                 .Result.SelectMany(x => x.Lists.Where(x => IsListForumEnabled(x).Result)
                 .SelectMany(x => x.Items.Where(x => x.ForumPost != null))))
             {
-                item.SorryMessage = await PostUpdateMessage(item, "Sorry!", "The bot is down for maintenence, sorry for the inconvenience <3");
+                item.ItemUpdateQueue.Enqueue(new ItemUpdate(ItemUpdateType.BotShutdown, string.Empty));
+                item.SorryMessage = await ProcessUpdateMessages(item);
             }
             await _logger.LogAsync(LogSeverity.Info, this, "Apologized in forum posts");
         }
