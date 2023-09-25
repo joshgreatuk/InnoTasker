@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Rest;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,15 +15,21 @@ namespace InnoTasker.Data.ToDo
     {
         public int CurrentID { get; set; } = 0;
         public string Name { get; set; }
-        public ITextChannel ListChannel { get; set; }
-        public ITextChannel CommandChannel { get; set; }
-        public IForumChannel? ForumChannel { get; set; }
+
+        public ulong ListChannelID { get; set; }
+        public ulong CommandChannelID { get; set; }
+        public ulong? ForumChannelID { get; set; }
+        [JsonIgnore] public ITextChannel ListChannel { get; set; }
+        [JsonIgnore] public ITextChannel CommandChannel { get; set; }
+        [JsonIgnore] public IForumChannel? ForumChannel { get; set; }
 
         public List<string> Categories { get; set; } = new();
         public List<string> Stages { get; set; } = new();
 
-        public ITextChannel? MessageChannel { get; set; }
-        public IUserMessage? Message { get; set; }
+        public ulong? MessageChannelID { get; set; }
+        [JsonIgnore] public ITextChannel? MessageChannel { get; set; }
+        public ulong? MessageID;
+        [JsonIgnore] public IUserMessage? Message { get; set; }
         public List<ToDoItem> Items { get; set; } = new();
 
         public Dictionary<ulong, ListUserPermissions> UserPermissions { get; set; } = new();

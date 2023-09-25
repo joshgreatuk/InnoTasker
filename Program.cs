@@ -11,6 +11,7 @@ using System;
 using System.Diagnostics;
 using InnoTasker.Services.Interfaces.Admin;
 using InnoTasker.Services.Admin;
+using System.Runtime.CompilerServices;
 
 namespace InnoTasker
 {
@@ -19,9 +20,8 @@ namespace InnoTasker
         public static Task Main(string[] args)
         {
             Program program = new();
-            AppDomain.CurrentDomain.ProcessExit += program.ExitSafely;
             AppDomain.CurrentDomain.UnhandledException += program.ExitSafely;
-            Console.CancelKeyPress += program.ExitSafely;
+            Console.CancelKeyPress += (s, e) => { e.Cancel = true; program.ExitSafely(s, e); Environment.Exit(0); };
             return program.MainAsync();
         }
 
@@ -92,9 +92,24 @@ namespace InnoTasker
 
             DiscordSocketClient client = _services.GetRequiredService<DiscordSocketClient>();
             client.Log += _logger.LogAsync;
+            client.Ready += ClientReady;
 
             await client.LoginAsync(TokenType.Bot, IsDebug() ? s_debugBotToken : s_releaseBotToken);
             await client.StartAsync();
+
+            programTimer.Stop();
+
+            await Task.Delay(-1);
+        }
+
+        public async Task ClientReady()
+        {
+            programTimer.Start();
+
+            Task.WaitAll(
+                _services.GetRequiredService<GuildDatabase>().Init(),
+                _services.GetRequiredService<UserEmojiDatabase>().Init()
+             );
 
             Task.WaitAll(
                 _services.GetRequiredService<IToDoListService>().InitService(),
@@ -104,8 +119,6 @@ namespace InnoTasker
 
             programTimer.Stop();
             await _logger.LogAsync(LogSeverity.Info, this, $"InnoTasker Initialized in {programTimer.ElapsedMilliseconds}ms! :)");
-
-            await Task.Delay(-1);
         }
 
         public void ExitSafely(object? sender, EventArgs eventArgs)

@@ -135,7 +135,9 @@ namespace InnoTasker.Services.ToDo
                 //Delete the old message
                 await list.MessageChannel.DeleteMessageAsync(list.Message);
                 list.Message = null;
+                list.MessageID = null;
                 list.MessageChannel = null;
+                list.MessageChannelID = null;
             }
 
             //Check if the message exists
@@ -144,11 +146,13 @@ namespace InnoTasker.Services.ToDo
                 if (list.Message == null) throw new NullReferenceException();
                 await list.ListChannel.GetMessageAsync(list.Message.Id);
             }
-            catch
+            catch (Exception ex)
             {
                 //Create the message then return
                 list.Message = await list.ListChannel.SendMessageAsync(embeds: listEmbeds.ToArray());
+                list.MessageID = list.Message.Id;
                 list.MessageChannel = list.ListChannel;
+                list.MessageChannelID = list.ListChannel.Id;
                 return;
             }
 
@@ -303,10 +307,9 @@ namespace InnoTasker.Services.ToDo
         {
             await message.ModifyAsync(x =>
             {
-                Embed[] embeds = new Embed[x.Embeds.Value.Length + 1];
-                x.Embeds.Value.CopyTo(embeds, 0);
-                embeds[embeds.Length - 1] = embed;
-                x.Embeds = new Optional<Embed[]>(embeds);
+                List<Embed> embeds = message.Embeds.Select(x => (Embed)x).ToList();
+                embeds.Add(embed);
+                x.Embeds = new Optional<Embed[]>(embeds.ToArray());
             });
         }
     }

@@ -73,9 +73,11 @@ namespace InnoTasker.Data.ToDo
                 listData.Name = toDoListName;
                 await guildService.AddNewList(guildID, listData);
             }
-
+            listData.ListChannelID = toDoChannel.Id;
             listData.ListChannel = toDoChannel;
+            listData.CommandChannelID = toDoCommandChannel.Id;
             listData.CommandChannel = toDoCommandChannel;
+            listData.ForumChannelID = toDoForumChannel != null ? toDoForumChannel.Id : null;
             listData.ForumChannel = toDoForumChannel;
 
             listData.Categories = categoryList;

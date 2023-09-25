@@ -21,12 +21,15 @@ namespace InnoTasker.Data.Databases
         {
             _logger = services.GetRequiredService<ILogger>();
             Path = path;
+        }
 
+        public async Task Init() 
+        { 
             if (!Directory.Exists(Path)) Directory.CreateDirectory(Path);
 
-            _logger.LogAsync(LogSeverity.Info, this, $"Initializing database");
+            await _logger.LogAsync(LogSeverity.Info, this, $"Initializing database");
 
-            foreach (string file in Directory.GetFiles(path, "*.json"))
+            foreach (string file in Directory.GetFiles(Path, "*.json"))
             {
                 string rawJson = File.ReadAllText(file);
                 string fileName = file.Split("\\").Last().Split('.').First();
@@ -34,15 +37,16 @@ namespace InnoTasker.Data.Databases
                 {
                     TKey key = (TKey)Convert.ChangeType(fileName, typeof(TKey));
                     TValue value = JsonConvert.DeserializeObject<TValue>(rawJson);
+                    InitEntry(ref value);
                     base.Add(key, value);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogAsync(LogSeverity.Error, this, $"Error loading file '{fileName}', file skipped", ex);
+                    await _logger.LogAsync(LogSeverity.Error, this, $"Error loading file '{fileName}', file skipped", ex);
                 }
             }
 
-            _logger.LogAsync(LogSeverity.Info, this, $"Database initialized");
+            await _logger.LogAsync(LogSeverity.Info, this, $"Database initialized");
         }
 
         public new void Add(TKey key, TValue value)
@@ -92,6 +96,11 @@ namespace InnoTasker.Data.Databases
                 return false;
             }
             return true;
+        }
+
+        public virtual void InitEntry(ref TValue value)
+        {
+
         }
     }
 }

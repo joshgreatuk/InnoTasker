@@ -44,7 +44,7 @@ namespace InnoTasker.Services.ToDo
                 if (list.ForumChannel == null) throw new NullReferenceException();
                 await list.ForumChannel.GetActiveThreadsAsync();
             }
-            catch
+            catch (Exception ex)
             {
                 list.ForumChannel = null;
                 return false;
