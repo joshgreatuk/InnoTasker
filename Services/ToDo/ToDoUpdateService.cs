@@ -216,6 +216,12 @@ namespace InnoTasker.Services.ToDo
 
             await _toDoListService.UpdateToDoItem(guildID, list, item);
         }
+
+        public async Task<string> GetListNameFromChannel(ulong guildID, ulong channelID)
+        {
+            ToDoList? list = await _guildService.GetToDoListFromChannel(guildID, channelID);
+            return list != null ? list.Name : "";
+        }
         #endregion
         #region Helper Methods
         public async Task<ToDoList> GetList(ulong guildID, string listName)

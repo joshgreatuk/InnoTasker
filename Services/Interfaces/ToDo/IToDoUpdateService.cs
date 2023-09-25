@@ -26,5 +26,7 @@ namespace InnoTasker.Services.Interfaces.ToDo
 
         public Task TaskAddCategory(ulong guildID, string listName, int taskID, string category);
         public Task TaskRemoveCategory(ulong guildID, string listName, int taskID, string category);
+
+        public Task<string> GetListNameFromChannel(ulong guildID, ulong channelID);
     }
 }
