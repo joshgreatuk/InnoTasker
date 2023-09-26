@@ -13,22 +13,22 @@ namespace InnoTasker.Modules
     using Preconditions;
     using System.Runtime.InteropServices;
 
-    [Group("to-do", "Commands relating to a to-do list")]
+    [Group("todo", "Commands relating to a to-do list")]
     public class ToDoModule : ToDoModuleBase
     {
         public ToDoModule(IGuildService guildService, IToDoUpdateService updateService) : base(guildService, updateService) { }    
 
         [DoListUserPermissionCheck(ListUserPermissions.Editor)]
-        [SlashCommand("create-item", "Creates a new to-do task")]
+        [SlashCommand("create", "Creates a new to-do task")]
         public async Task CreateDoDoItem(string title, string description,
-            string initialCategory, string initialStage)
+            string initialCategory="", string initialStage="")
         {
             ToDoItem item = new()
             {
                 Name = title,
                 Description = description,
-                Categories = new() { initialCategory },
-                Stages = new() { initialStage }
+                Categories = initialCategory != "" ? new() { initialCategory } : new(),
+                Stages = initialStage != "" ? new() { initialStage } : new()
             };
 
             
@@ -36,7 +36,7 @@ namespace InnoTasker.Modules
         }
 
         [DoListUserPermissionCheck(ListUserPermissions.Editor)]
-        [SlashCommand("delete-item", "Deletes a to-do task")]
+        [SlashCommand("delete", "Deletes a to-do task")]
         public async Task RemoveToDoItem(int taskID)
         {
             if (!await DoesTaskExist(taskID)) return;
@@ -45,7 +45,7 @@ namespace InnoTasker.Modules
         }
 
         [DoListUserPermissionCheck(ListUserPermissions.Editor)]
-        [SlashCommand("change-item-description", "Changes the description of a to-do task")]
+        [SlashCommand("change-description", "Changes the description of a to-do task")]
         public async Task ChangeItemDescription(int taskID, string newDescription)
         {
             if (!await DoesTaskExist(taskID)) return;
@@ -54,7 +54,7 @@ namespace InnoTasker.Modules
         }
 
         [DoListUserPermissionCheck(ListUserPermissions.Editor)]
-        [SlashCommand("complete-item", "Marks a to-do task as complete")]
+        [SlashCommand("complete", "Marks a to-do task as complete")]
         public async Task CompleteItem(int taskID)
         {
             if (!await DoesTaskExist(taskID)) return;
@@ -63,7 +63,7 @@ namespace InnoTasker.Modules
         }
 
         [DoListUserPermissionCheck(ListUserPermissions.Editor)]
-        [SlashCommand("uncomplete-item", "Unmarks a completed to-do task as complete")]
+        [SlashCommand("uncomplete", "Unmarks a completed to-do task as complete")]
         public async Task UnCompleteItem(int taskID)
         {
             if (!await DoesTaskExist(taskID)) return;
@@ -72,7 +72,7 @@ namespace InnoTasker.Modules
         }
 
         [DoListUserPermissionCheck(ListUserPermissions.User)]
-        [SlashCommand("item-add-myself", "Adds yourself to a to-do task")]
+        [SlashCommand("add-myself", "Adds yourself to a to-do task")]
         public async Task ItemAddMyself(int taskID)
         {
             if (!await DoesTaskExist(taskID)) return;
@@ -81,7 +81,7 @@ namespace InnoTasker.Modules
         }
 
         [DoListUserPermissionCheck(ListUserPermissions.User)]
-        [SlashCommand("item-remove-myself", "Removes yourself from a to-do task")]
+        [SlashCommand("remove-myself", "Removes yourself from a to-do task")]
         public async Task ItemRemoveMyself(int taskID)
         {
             if (!await DoesTaskExist(taskID)) return;
@@ -90,7 +90,7 @@ namespace InnoTasker.Modules
         }
 
         [DoListUserPermissionCheck(ListUserPermissions.Editor)]
-        [SlashCommand("add-item-category", "Adds a category to a to-do task")]
+        [SlashCommand("add-category", "Adds a category to a to-do task")]
         public async Task AddCategory(int taskID, string category)
         {
             if (!await DoesTaskExist(taskID) || !await DoesCategoryExist(category)) return;
@@ -99,7 +99,7 @@ namespace InnoTasker.Modules
         }
 
         [DoListUserPermissionCheck(ListUserPermissions.Editor)]
-        [SlashCommand("remove-item-category", "Removes a category from a to-do task")]
+        [SlashCommand("remove-category", "Removes a category from a to-do task")]
         public async Task RemoveCategory(int taskID, string category)
         {
             if (!await DoesTaskExist(taskID) || !await DoesCategoryExist(category)) return;
@@ -108,7 +108,7 @@ namespace InnoTasker.Modules
         }
 
         [DoListUserPermissionCheck(ListUserPermissions.Editor)]
-        [SlashCommand("add-item-stage", "Adds a stage to a to-do task")]
+        [SlashCommand("add-stage", "Adds a stage to a to-do task")]
         public async Task AddStage(int taskID, string stage)
         {
             if (!await DoesTaskExist(taskID) || !await DoesStageExist(stage)) return;
@@ -117,7 +117,7 @@ namespace InnoTasker.Modules
         }
 
         [DoListUserPermissionCheck(ListUserPermissions.Editor)]
-        [SlashCommand("remove-item-stage", "Removes a stage from a to-do task")]
+        [SlashCommand("remove-stage", "Removes a stage from a to-do task")]
         public async Task RemoveStage(int taskID, string stage)
         {
             if (!await DoesTaskExist(taskID) || !await DoesStageExist(stage)) return;

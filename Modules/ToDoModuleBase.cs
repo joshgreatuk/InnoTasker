@@ -53,7 +53,7 @@ namespace InnoTasker.Modules
 
         public async Task<bool> DoesCategoryExist(string category)
         {
-            bool result = (await _guildService.GetToDoList(Context.Guild.Id, listName)).Categories.Exists(x => x == listName);
+            bool result = (await _guildService.GetToDoList(Context.Guild.Id, listName)).Categories.Exists(x => x == category);
             if (!result)
             {
                 await FollowupAsync($"Category '{category}' doesn't exist!");

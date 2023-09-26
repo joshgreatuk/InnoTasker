@@ -58,7 +58,7 @@ namespace InnoTasker.Data.ToDo
             { ItemUpdateType.StageRemoved, "Remove stage '{context}' from task'" },
             { ItemUpdateType.StageRenamed, "Stage renamed: {renamedContext}" },
 
-            { ItemUpdateType.TaskRemoved, "Task removed by {userMention}" },
+            { ItemUpdateType.TaskRemoved, "Task removed by {userMention}\n\n**This post is archived and ignored by InnoTasker**" },
             { ItemUpdateType.ChannelMoved, "Post channel has been moved to {channelMention}" }
         };
 
@@ -82,11 +82,12 @@ namespace InnoTasker.Data.ToDo
 
         public string ProcessMessage(string message)
         {
-            message.Replace("{context}", context);
-            message.Replace("{userMention}", MentionUtils.MentionUser(ulong.Parse(context)));
-            message.Replace("{channelMention}", MentionUtils.MentionChannel(ulong.Parse(context)));
-            message.Replace("{roleMention}", MentionUtils.MentionRole(ulong.Parse(context)));
-            message.Replace("{renamedContext}", string.Join(" --> ", context.Split(":")));
+            message = message.Replace("{context}", context);
+            message = message.Replace("{renamedContext}", string.Join(" --> ", context.Split(":")));
+            if (!ulong.TryParse(context, out ulong temp)) return message;
+            message = message.Replace("{userMention}", MentionUtils.MentionUser(ulong.Parse(context)));
+            message = message.Replace("{channelMention}", MentionUtils.MentionChannel(ulong.Parse(context)));
+            message = message.Replace("{roleMention}", MentionUtils.MentionRole(ulong.Parse(context)));
             return message;
         }
     }

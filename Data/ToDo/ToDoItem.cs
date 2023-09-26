@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Rest;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,10 +22,14 @@ namespace InnoTasker.Data.ToDo
 
         public List<ulong> AssignedUsers { get; set; } = new();
 
-        public IThreadChannel? ForumPost { get; set; }
-        public IUserMessage? StatusMessage { get; set; }
 
-        public IUserMessage? SorryMessage { get; set; }
+        public ulong? ForumPostID { get; set; }
+        [JsonIgnore] public IThreadChannel? ForumPost { get; set; }
+        public ulong? StatusMessageID { get; set; }
+        [JsonIgnore] public IUserMessage? StatusMessage { get; set; }
+
+        public ulong? SorryMessageID { get; set; }
+        [JsonIgnore] public IUserMessage? SorryMessage { get; set; }
 
         public string? CachedToDoEntry { get; set; }
 

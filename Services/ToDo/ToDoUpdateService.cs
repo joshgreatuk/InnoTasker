@@ -87,9 +87,9 @@ namespace InnoTasker.Services.ToDo
             if (await _toDoForumService.IsListForumEnabled(list))
             {
                 item.ItemUpdateQueue.Enqueue(new ItemUpdate(ItemUpdateType.UnCompleted, user.ToString()));
+                await _toDoForumService.UnCompleteTaskPost(item);
                 await _toDoForumService.UpdateStatusMessage(item);
                 await _toDoForumService.ProcessUpdateMessages(item);
-                await _toDoForumService.UnCompleteTaskPost(item);
             }
 
             await _toDoListService.UpdateToDoItem(guildID, list, item);
@@ -101,18 +101,19 @@ namespace InnoTasker.Services.ToDo
             ToDoItem item = await list.GetToDoItem(taskID);
 
             if (item.AssignedUsers.Contains(user.Id)) return;
-            
-            if (await _toDoForumService.IsListForumEnabled(list)) 
+            item.AssignedUsers.Add(user.Id);
+
+            if (await _toDoForumService.IsListForumEnabled(list))
             {
                 if (!await _toDoForumService.DoesTaskPostExist(item))
                 {
                     await _toDoForumService.CreateTaskPost(list, item);
                 }
 
+                await _toDoForumService.AddUserTaskPost(item, user);
                 item.ItemUpdateQueue.Enqueue(new ItemUpdate(ItemUpdateType.UserAdded, user.Id.ToString()));
                 await _toDoForumService.UpdateStatusMessage(item);
                 await _toDoForumService.ProcessUpdateMessages(item);
-                await _toDoForumService.AddUserTaskPost(item, user);
             }
 
             await _toDoListService.UpdateToDoItem(guildID, list, item);
@@ -124,6 +125,7 @@ namespace InnoTasker.Services.ToDo
             ToDoItem item = await list.GetToDoItem(taskID);
 
             if (!item.AssignedUsers.Contains(user.Id)) return;
+            item.AssignedUsers.Remove(user.Id);
 
             if (await _toDoForumService.IsListForumEnabled(list))
             {

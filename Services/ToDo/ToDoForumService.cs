@@ -30,6 +30,7 @@ namespace InnoTasker.Services.ToDo
                 {
                     await item.SorryMessage.DeleteAsync();
                     item.SorryMessage = null;
+                    item.SorryMessageID = null;
                 }
             }
             await _logger.LogAsync(LogSeverity.Info, this, "Initialized!");
@@ -69,10 +70,13 @@ namespace InnoTasker.Services.ToDo
         public async Task CreateTaskPost(ToDoList list, ToDoItem item)
         {
             if (await DoesTaskPostExist(item)) return;
-            if (await IsListForumEnabled(list)) return;
+            if (!await IsListForumEnabled(list)) return;
 
-            item.ForumPost = await list.ForumChannel.CreatePostAsync($"#{item.ID} | {item.Name}");
-            await UpdateStatusMessage(item);
+            item.ForumPost = await list.ForumChannel.CreatePostAsync($"#{item.ID} | {item.Name}", embed: await CreateStatusMessage(item));
+            item.ForumPostID = item.ForumPost.Id;
+            item.StatusMessage = await item.ForumPost.ModifyMessageAsync(item.ForumPost.GetMessagesAsync(1).FirstAsync().Result.First().Id, x => x.Content = "");
+            item.StatusMessageID = item.StatusMessage.Id;
+            await item.StatusMessage.PinAsync();
         }
 
         public async Task CompleteTaskPost(ToDoItem item)
@@ -107,6 +111,22 @@ namespace InnoTasker.Services.ToDo
         {
             if (!await DoesTaskPostExist(item)) return;
 
+            Embed statusMessage = await CreateStatusMessage(item);
+
+            try
+            {
+                await item.StatusMessage.ModifyAsync(x => x.Embed = statusMessage);
+            }
+            catch //Message doesnt exist, create and pin it
+            {
+                item.StatusMessage = await item.ForumPost.SendMessageAsync(embed: statusMessage);
+                item.StatusMessageID = item.StatusMessage.Id;
+                await item.StatusMessage.PinAsync();
+            }
+        }
+
+        public async Task<Embed> CreateStatusMessage(ToDoItem item)
+        {
             List<string> statusFields = new()
             {
                 $"ID: {item.ID}",
@@ -116,20 +136,10 @@ namespace InnoTasker.Services.ToDo
                 $"Assigned users: {string.Join(", ", item.AssignedUsers.Select(x => MentionUtils.MentionUser(x)))}",
             };
 
-            Embed statusMessage = new EmbedBuilder()
+            return new EmbedBuilder()
                 .WithTitle($"#{item.ID} | {item.Name}")
                 .WithDescription(string.Join("\n", statusFields))
                 .Build();
-
-            try
-            {
-                await item.StatusMessage.ModifyAsync(x => x.Embed = statusMessage);
-            }
-            catch //Message doesnt exist, create and pin it
-            {
-                item.StatusMessage = await item.ForumPost.SendMessageAsync(embed: statusMessage);
-                await item.StatusMessage.PinAsync();
-            }
         }
 
         public async Task<IUserMessage> ProcessUpdateMessages(ToDoItem item)
@@ -155,6 +165,7 @@ namespace InnoTasker.Services.ToDo
             {
                 item.ItemUpdateQueue.Enqueue(new ItemUpdate(ItemUpdateType.BotShutdown, string.Empty));
                 item.SorryMessage = await ProcessUpdateMessages(item);
+                item.SorryMessageID = item.SorryMessage.Id;
             }
             await _logger.LogAsync(LogSeverity.Info, this, "Apologized in forum posts");
         }

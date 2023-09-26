@@ -231,8 +231,7 @@ namespace InnoTasker.Modules
                 await DeleteOriginalResponseAsync();
                 return;
             }
-            instance.categoryList.Remove(categoryName);
-            instance.categoryList.Add(newName);
+            instance.categoryList[instance.categoryList.IndexOf(categoryName)] = newName;
 
             if (instance.categoriesRenamed.ContainsKey(categoryName))
             {
@@ -296,8 +295,7 @@ namespace InnoTasker.Modules
                 await DeleteOriginalResponseAsync();
                 return;
             }
-            instance.stageList.Remove(stageName);
-            instance.stageList.Add(newName);
+            instance.stageList[instance.stageList.IndexOf(stageName)] = newName;
 
             if (instance.stagesRenamed.ContainsKey(stageName))
             {

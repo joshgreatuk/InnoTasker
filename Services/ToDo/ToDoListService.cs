@@ -188,7 +188,7 @@ namespace InnoTasker.Services.ToDo
 
             if (updateMessage) await UpdateToDoListMessage(list);
 
-            if (await _toDoForumService.IsListForumEnabled(list))
+            if (await _toDoForumService.IsListForumEnabled(list) && item.ItemUpdateQueue.Count > 0 )
             {
                 await _toDoForumService.ProcessUpdateMessages(item);
             }
