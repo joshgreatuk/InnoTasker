@@ -33,7 +33,7 @@ namespace InnoTasker
 
             _interactionService = services.GetRequiredService<InteractionService>();
             _interactionService.Log += _logger.LogAsync;
-            //_interactionService.InteractionExecuted += OnInteractionExecuted;
+            _interactionService.InteractionExecuted += OnInteractionExecuted;
         }
 
         public async Task OnClientReady()
@@ -55,7 +55,7 @@ namespace InnoTasker
             try
             {
                 SocketInteractionContext context = new(_client, interaction);
-                await _interactionService.ExecuteCommandAsync(context, _services);
+                IResult result = await _interactionService.ExecuteCommandAsync(context, _services);
             }
             catch (Exception ex)
             {
@@ -63,12 +63,18 @@ namespace InnoTasker
             }
         }
 
-        //public async Task OnInteractionExecuted(ICommandInfo info, IInteractionContext context, IResult result)
-        //{
-        //    if (result.IsSuccess) return;
+        public async Task OnInteractionExecuted(ICommandInfo info, IInteractionContext context, IResult result)
+        {
+            if (result.IsSuccess) return;
 
-        //    await _logger.LogAsync(LogSeverity.Error, this, "OnInteractionExecuted Error", new Exception(result.ErrorReason));
-        //    //await context.Interaction.RespondAsync(embed: new EmbedBuilder().WithTitle($"InnoTasker Error").WithDescription(result.ErrorReason).Build());
-        //}
+            if (result.Error is InteractionCommandError.UnmetPrecondition)
+            {
+                await context.Interaction.RespondAsync(result.ErrorReason, ephemeral: true);
+            }
+            else
+            {
+                await _logger.LogAsync(LogSeverity.Error, this, result.ErrorReason);
+            }
+        }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using InnoTasker.Data.ToDo;
 using InnoTasker.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +21,7 @@ namespace InnoTasker.Modules.Preconditions
             this.permissionRequired = permissionRequired;
         }
 
-        public async override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
+        public async override Task<PreconditionResult> CheckRequirementsAsync(IInteractionContext context, ICommandInfo command, IServiceProvider services)
         {
             IGuildService guildService = services.GetRequiredService<IGuildService>();
             ToDoList? targetList = await guildService.GetToDoListFromChannel(context.Guild.Id, context.Channel.Id);
@@ -40,7 +40,7 @@ namespace InnoTasker.Modules.Preconditions
 
             if (!hasPermittedRole && (!targetList.UserPermissions.TryGetValue(context.User.Id, out ListUserPermissions permissions) || permissions < permissionRequired))
             {
-                return PreconditionResult.FromError($"You must need {permissionRequired} permissions to run this command");
+                return PreconditionResult.FromError($"You need {permissionRequired} permissions to run this command");
             }
 
             return PreconditionResult.FromSuccess();

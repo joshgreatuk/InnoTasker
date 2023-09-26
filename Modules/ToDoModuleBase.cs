@@ -11,13 +11,12 @@ using InnoTasker.Modules.Preconditions;
 namespace InnoTasker.Modules
 {
     [DoListCommandChannelCheck()]
-    public class ToDoModuleBase : InteractionModuleBase<SocketInteractionContext>
+    public class ToDoModuleBase : InnoModuleBase
     {
         protected readonly IGuildService _guildService;
         protected readonly IToDoUpdateService _updateService;
 
         protected string listName;
-        protected bool success = true;
 
         public ToDoModuleBase(IGuildService guildService, IToDoUpdateService updateService)
         {
@@ -25,19 +24,10 @@ namespace InnoTasker.Modules
             _updateService = updateService;
         }
 
-        public override async Task BeforeExecuteAsync(ICommandInfo command)
+        public async override Task BeforeExecuteAsync(ICommandInfo command)
         {
-            await DeferAsync();
+            base.BeforeExecuteAsync(command);
             listName = await _updateService.GetListNameFromChannel(Context.Guild.Id, Context.Channel.Id);
-        }
-
-        public override async Task AfterExecuteAsync(ICommandInfo command)
-        {
-            if (success)
-            {
-                await FollowupAsync("Done!");
-                await DeleteOriginalResponseAsync();
-            }
         }
 
         public async Task<bool> DoesTaskExist(int taskID)
