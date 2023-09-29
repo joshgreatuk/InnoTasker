@@ -15,7 +15,9 @@ namespace InnoTasker.Services.Interfaces.Admin
         public Task UpdatePosts();
         public Task UpdatePost(AdminPostType type);
 
-        public Task SetPostChannel(AdminPostType type, IGuild guild, IChannel channel);
+        public Task SetPostChannel(AdminPostType type, IGuild guild, ITextChannel channel);
+
+        public Task RefreshList(ulong guildID, string listName);
 
         public Task Shutdown();
     }

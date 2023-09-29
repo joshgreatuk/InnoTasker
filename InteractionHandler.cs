@@ -2,6 +2,7 @@
 using Discord.Interactions;
 using Discord.Rest;
 using Discord.WebSocket;
+using InnoTasker.Modules;
 using InnoTasker.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -47,6 +48,10 @@ namespace InnoTasker
             {
                 await _interactionService.AddModulesGloballyAsync(true, _interactionService.Modules.ToArray());
             }
+
+            ModuleInfo botAdmin = await _interactionService.AddModuleAsync(typeof(BotAdminModule), _services);
+            await _interactionService.AddModulesToGuildAsync(s_testGuild, true, botAdmin);
+
             await _logger.LogAsync(LogSeverity.Info, this, $"InteractionHandler Initialized!");
         }
 

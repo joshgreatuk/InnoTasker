@@ -108,7 +108,8 @@ namespace InnoTasker
 
             Task.WaitAll(
                 _services.GetRequiredService<GuildDatabase>().Init(),
-                _services.GetRequiredService<UserEmojiDatabase>().Init()
+                _services.GetRequiredService<UserEmojiDatabase>().Init(),
+                _services.GetRequiredService<AdminPostDatabase>().Init()
              );
 
             Task.WaitAll(
@@ -137,11 +138,10 @@ namespace InnoTasker
             List<IDatabase> toSave = new()
             {
                 _services.GetRequiredService<GuildDatabase>(),
-                _services.GetRequiredService<UserEmojiDatabase>()
+                _services.GetRequiredService<UserEmojiDatabase>(),
+                _services.GetRequiredService<AdminPostDatabase>()
             };
             foreach (IDatabase database in toSave) database.Save();
-
-            //TO-DO: Save AdminService data
 
             programTimer.Stop();
             _logger.LogAsync(LogSeverity.Info, this, $"InnoTasker has shutdown successfully in {programTimer.ElapsedMilliseconds}ms <3");
