@@ -1,6 +1,8 @@
 ﻿using Discord;
+using InnoTasker.Data;
 using InnoTasker.Data.Admin;
 using InnoTasker.Data.Databases;
+using InnoTasker.Modules.Settings;
 using InnoTasker.Services.Interfaces;
 using InnoTasker.Services.Interfaces.Admin;
 using InnoTasker.Services.Interfaces.ToDo;
@@ -19,11 +21,18 @@ namespace InnoTasker.Services.Admin
         private readonly IToDoListService _toDoListService;
         private readonly AdminPostDatabase _adminPosts;
 
+        private readonly Dictionary<AdminPostType, ISettingsPageBuilder> _adminPageBuilders;
+
         public AdminService(ILogger logger, IServiceProvider services) : base(logger) 
         {
             _services = services;
             _toDoListService = _services.GetRequiredService<IToDoListService>();
             _adminPosts = _services.GetRequiredService<AdminPostDatabase>();
+
+            _adminPageBuilders = new()
+            {
+
+            };
         }
 
         private Timer _updateTimer;
@@ -50,7 +59,22 @@ namespace InnoTasker.Services.Admin
 
         public async Task UpdatePost(AdminPost post)
         {
+            if (!_adminPageBuilders.TryGetValue(post.Type, out ISettingsPageBuilder pageBuilder)) return;
+            if (post.Channel == null || post.Guild == null) return;
 
+            MessageContext message = await pageBuilder.BuildPage(null);
+
+            try
+            {
+                //Try to update message
+                await post.Message.ModifyAsync(x => { x.Embed = message.embed; x.Components = message.component.Build(); });
+            }
+            catch
+            {
+                //Post new message
+                post.Message = await post.Channel.SendMessageAsync(embed: message.embed, components: message.component.Build());
+                post.MessageID = post.Message.Id;
+            }
         }
 
         public async Task SetPostChannel(AdminPostType type, IGuild guild, ITextChannel channel)

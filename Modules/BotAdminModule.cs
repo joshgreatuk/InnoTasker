@@ -32,7 +32,7 @@ namespace InnoTasker.Modules
             _guildService = guildService;
         }
 
-        public async Task SetPostChannel(AdminPostType type, ITextChannel channel)
+        public async Task SetPostChannel(AdminPostType type, ITextChannel channel=null)
         {
             await _adminService.SetPostChannel(type, channel.Guild, channel);
         }
@@ -58,8 +58,7 @@ namespace InnoTasker.Modules
             //Generaete Embed with list info and also item info dump
             ToDoList list = await _guildService.GetToDoList(info.guildID, info.listName);
             success = false;
-            EmbedBuilder embed = await GenerateListInfo(list, info);
-            await FollowupAsync(embed: (await GenerateItemInfo(embed, list)).Build());
+            await FollowupAsync(embeds: (await GenerateItemInfo(list, info)).Select(x => x.Build()).Take(10).ToArray());
         }
 
         [ComponentInteraction("botadmin-refresh-*")]
@@ -73,21 +72,63 @@ namespace InnoTasker.Modules
 
         public async Task<EmbedBuilder> GenerateListInfo(ToDoList list, SupportInfo info)
         {
-            EmbedBuilder embed = new();
+            IGuild guild = _client.GetGuild(info.guildID);
+            IGuildUser user = await guild.GetUserAsync(info.userID);
+
+            EmbedBuilder embed = new EmbedBuilder()
+                .WithTitle($"To-Do List (U/G/L) {info.userID}/{info.guildID}/{info.listName}")
+                .WithDescription(string.Join("\n", await DumpListFields(guild, user, list)));
             
             return embed;
         }
 
-        public async Task<EmbedBuilder> GenerateItemInfo(EmbedBuilder embed, ToDoList list)
+        public async Task<List<EmbedBuilder>> GenerateItemInfo(ToDoList list, SupportInfo info) ///Currently supports 225 tasks
         {
-            return embed;
+            List<EmbedBuilder> embeds = new();
+            embeds.Add(await GenerateListInfo(list, info));
+
+            int currentPage = 1;
+            int lastPage = (int)MathF.Ceiling(list.Items.Count / 25);
+            EmbedBuilder currentBuilder = null;
+            for (int i=0; i < list.Items.Count; i++)
+            {
+                if (i % 25 == 0)
+                {
+                    currentPage++;
+                    if (currentBuilder != null) embeds.Add(currentBuilder);
+                    currentBuilder = new EmbedBuilder().WithTitle($"List {list.Name} items page {currentPage}/{lastPage}");
+                }
+
+                ToDoItem item = list.Items[i];
+
+                EmbedFieldBuilder newField = new EmbedFieldBuilder()
+                    .WithName($"Item #{item.ID}({item.Name})")
+                    .WithValue(string.Join("\n", await DumpItemFields(item)));
+                currentBuilder.AddField(newField);
+            }
+            if (currentBuilder != null && !embeds.Contains(currentBuilder)) embeds.Add(currentBuilder);
+
+            return embeds;
         }
 
         public async Task<List<string>> DumpListFields(IGuild guild, IGuildUser user, ToDoList list)
         {
             return new() 
-            { 
-
+            {
+                $"**SupportID User:** {user.Id} - {user.DisplayName}({user.GlobalName})",
+                $"**Guild:** {guild.Id} - {guild.Name}",
+                $"**CurrentID:** {list.CurrentID}",
+                $"**ListName:** {list.Name}",
+                $"**ListChannel:** {list.ListChannelID} - {list.ListChannel.Name}",
+                $"**CommandChannel:** {list.CommandChannelID} - {list.CommandChannel.Name}",
+                $"**ForumChannel:** {list.ForumChannelID} - {list.ForumChannel.Name}",
+                $"**Categories:** {list.Categories}",
+                $"**Stages:** {list.Stages}",
+                $"**MessageChannel:** {list.MessageChannelID} - {list.MessageChannel.Name}",
+                $"**Message:** {list.MessageID}",
+                $"**ItemCount (Total/Complete):** {list.Items.Count}/{list.Items.Count(x => x.IsComplete)}",
+                $"**UserPermissions:** {list.UserPermissions}",
+                $"**RolePermissions:** {list.RolePermissions}",
             };
         }
 
@@ -95,7 +136,18 @@ namespace InnoTasker.Modules
         {
             return new()
             {
-
+                $"**ID:** {item.ID}",
+                $"**Name:** {item.Name}",
+                $"**Description:** {item.Description}",
+                $"**Categories:** {item.Categories}",
+                $"**Stages:** {item.Stages}",
+                $"**IsComplete:** {item.IsComplete}",
+                $"**AssignedUsers:** {item.AssignedUsers}",
+                $"**ForumPost:** {item.ForumPostID} - {item.ForumPost.Name}",
+                $"**StatusMessage:** {item.StatusMessageID}",
+                $"**SorryMessage:** {item.SorryMessageID}",
+                $"**CachedToDoEntry:** {item.CachedToDoEntry}",
+                $"**ItemUpdateQueue:** {item.ItemUpdateQueue}",
             };
         }
     }
