@@ -31,7 +31,8 @@ namespace InnoTasker.Services.Admin
 
             _adminPageBuilders = new()
             {
-
+                { AdminPostType.GuildService, new GuildServiceStatsPageBuilder(_services.GetRequiredService<IGuildService>()) },
+                { AdminPostType.ServerStats, new ServerStatsPageBuilder() }
             };
         }
 
