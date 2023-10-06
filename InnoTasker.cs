@@ -15,11 +15,11 @@ using System.Runtime.CompilerServices;
 
 namespace InnoTasker
 {
-    public class Program
+    public class InnoTasker
     {
         public static Task Main(string[] args)
         {
-            Program program = new();
+            InnoTasker program = new();
             AppDomain.CurrentDomain.UnhandledException += program.ExitSafely;
             Console.CancelKeyPress += (s, e) => { e.Cancel = true; program.ExitSafely(s, e); Environment.Exit(0); };
             return program.MainAsync();
@@ -33,7 +33,7 @@ namespace InnoTasker
 
         private readonly Stopwatch programTimer;
 
-        public Program()
+        public InnoTasker()
         {
             programTimer = new Stopwatch();
             programTimer.Start();
@@ -71,6 +71,7 @@ namespace InnoTasker
                 //Databases
                 .AddSingleton(x => new GuildDatabase(x, $"{basePath}\\Data\\GuildData\\"))
                 .AddSingleton(x => new UserEmojiDatabase(x, $"{basePath}\\Data\\UserEmojis\\"))
+                .AddSingleton(x => new AdminPostDatabase(x, $"{basePath}\\Data\\AdminPosts\\"))
 
                 //Bot Services
                 .AddSingleton<IGuildService, GuildService>()

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Modules
 {
-    using InnoTasker.Services.Interfaces;
+    using global::InnoTasker.Services.Interfaces;
     using Preconditions;
 
     [Group("to-do-admin", "Admin commands for a to-do list")]
@@ -21,6 +21,7 @@ namespace InnoTasker.Modules
     {
         public ToDoAdminModule(IGuildService guildService, IToDoUpdateService updateService) : base(guildService, updateService) { }
 
+        [SlashCommand("generate-supportid", "Generates a support ID")]
         public async Task GenerateSupportID()
         {
             SupportInfo info = new SupportInfo(Context.Guild.Id,

@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace InnoTasker.Modules.Autocomplete
 {
-    public class ToDoListStageAutocomplete : AutocompleteHandler
+    public class StageAutocomplete : AutocompleteHandler
     {
         public async override Task<AutocompletionResult> GenerateSuggestionsAsync(IInteractionContext context, IAutocompleteInteraction autocompleteInteraction, IParameterInfo parameter, IServiceProvider services)
         {

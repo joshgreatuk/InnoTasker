@@ -23,7 +23,7 @@ namespace InnoTasker
 
         public override string ToString()
         {
-            return $"{guildID}.{channelID}.{listName}.{listName}";
+            return $"{guildID}.{channelID}.{userID}.{listName}";
         }
 
         public static SupportInfo ToInfo(string input)

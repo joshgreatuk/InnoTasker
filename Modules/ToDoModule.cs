@@ -9,7 +9,8 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Modules
 {
-    using InnoTasker.Services.Interfaces;
+    using Autocomplete;
+    using global::InnoTasker.Services.Interfaces;
     using Preconditions;
 
     [Group("todo", "Commands relating to a to-do list")]
@@ -24,7 +25,8 @@ namespace InnoTasker.Modules
 
             [SlashCommand("create", "Creates a new to-do task")]
             public async Task CreateDoDoItem(string title, string description,
-            string initialCategory = "", string initialStage = "")
+            [Autocomplete(typeof(CategoryAutocomplete))] string initialCategory = "",
+            [Autocomplete(typeof(StageAutocomplete))] string initialStage = "")
             {
                 ToDoItem item = new()
                 {
@@ -39,7 +41,7 @@ namespace InnoTasker.Modules
             }
 
             [SlashCommand("delete", "Deletes a to-do task")]
-            public async Task RemoveToDoItem(int taskID)
+            public async Task RemoveToDoItem([Autocomplete(typeof(ItemAutocomplete))] int taskID)
             {
                 if (!await DoesTaskExist(taskID)) return;
 
@@ -47,7 +49,7 @@ namespace InnoTasker.Modules
             }
 
             [SlashCommand("change-description", "Changes the description of a to-do task")]
-            public async Task ChangeItemDescription(int taskID, string newDescription)
+            public async Task ChangeItemDescription([Autocomplete(typeof(ItemAutocomplete))] int taskID, string newDescription)
             {
                 if (!await DoesTaskExist(taskID)) return;
 
@@ -55,7 +57,7 @@ namespace InnoTasker.Modules
             }
 
             [SlashCommand("complete", "Marks a to-do task as complete")]
-            public async Task CompleteItem(int taskID)
+            public async Task CompleteItem([Autocomplete(typeof(ItemAutocomplete))] int taskID)
             {
                 if (!await DoesTaskExist(taskID)) return;
 
@@ -63,7 +65,7 @@ namespace InnoTasker.Modules
             }
 
             [SlashCommand("uncomplete", "Unmarks a completed to-do task as complete")]
-            public async Task UnCompleteItem(int taskID)
+            public async Task UnCompleteItem([Autocomplete(typeof(ItemAutocomplete))] int taskID)
             {
                 if (!await DoesTaskExist(taskID)) return;
 
@@ -71,7 +73,8 @@ namespace InnoTasker.Modules
             }
 
             [SlashCommand("add-category", "Adds a category to a to-do task")]
-            public async Task AddCategory(int taskID, string category)
+            public async Task AddCategory([Autocomplete(typeof(ItemAutocomplete))] int taskID,
+                [Autocomplete(typeof(CategoryAutocomplete))] string category)
             {
                 if (!await DoesTaskExist(taskID) || !await DoesCategoryExist(category)) return;
 
@@ -79,7 +82,8 @@ namespace InnoTasker.Modules
             }
 
             [SlashCommand("remove-category", "Removes a category from a to-do task")]
-            public async Task RemoveCategory(int taskID, string category)
+            public async Task RemoveCategory([Autocomplete(typeof(ItemAutocomplete))] int taskID,
+                [Autocomplete(typeof(CategoryAutocomplete))] string category)
             {
                 if (!await DoesTaskExist(taskID) || !await DoesCategoryExist(category)) return;
 
@@ -87,7 +91,8 @@ namespace InnoTasker.Modules
             }
 
             [SlashCommand("add-stage", "Adds a stage to a to-do task")]
-            public async Task AddStage(int taskID, string stage)
+            public async Task AddStage([Autocomplete(typeof(ItemAutocomplete))] int taskID,
+                [Autocomplete(typeof(StageAutocomplete))] string stage)
             {
                 if (!await DoesTaskExist(taskID) || !await DoesStageExist(stage)) return;
 
@@ -95,7 +100,8 @@ namespace InnoTasker.Modules
             }
 
             [SlashCommand("remove-stage", "Removes a stage from a to-do task")]
-            public async Task RemoveStage(int taskID, string stage)
+            public async Task RemoveStage([Autocomplete(typeof(ItemAutocomplete))] int taskID,
+                [Autocomplete(typeof(StageAutocomplete))] string stage)
             {
                 if (!await DoesTaskExist(taskID) || !await DoesStageExist(stage)) return;
 
@@ -109,7 +115,7 @@ namespace InnoTasker.Modules
             public ToDoModuleUser(IGuildService guildService, IToDoUpdateService updateService) : base(guildService, updateService) { }
 
             [SlashCommand("add-myself", "Adds yourself to a to-do task")]
-            public async Task ItemAddMyself(int taskID)
+            public async Task ItemAddMyself([Autocomplete(typeof(ItemAutocomplete))] int taskID)
             {
                 if (!await DoesTaskExist(taskID)) return;
 
@@ -117,7 +123,7 @@ namespace InnoTasker.Modules
             }
 
             [SlashCommand("remove-myself", "Removes yourself from a to-do task")]
-            public async Task ItemRemoveMyself(int taskID)
+            public async Task ItemRemoveMyself([Autocomplete(typeof(ItemAutocomplete))] int taskID)
             {
                 if (!await DoesTaskExist(taskID)) return;
 

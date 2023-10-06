@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Data.Databases
 {
-    public class AdminPostDatabase : Database<AdminPostType, AdminPost>
+    public class AdminPostDatabase : Database<int, AdminPost>
     {
         private DiscordSocketClient _client;
 

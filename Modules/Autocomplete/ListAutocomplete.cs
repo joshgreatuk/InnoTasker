@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Modules.Autocomplete
 {
-    public class ToDoListAutocomplete : AutocompleteHandler
+    public class ListAutocomplete : AutocompleteHandler
     {
         public async override Task<AutocompletionResult> GenerateSuggestionsAsync(IInteractionContext context, IAutocompleteInteraction autocompleteInteraction, IParameterInfo parameter, IServiceProvider services)
         {

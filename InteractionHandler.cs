@@ -17,6 +17,7 @@ namespace InnoTasker
     public class InteractionHandler
     {
         private static readonly ulong s_testGuild = 1096556224167825408;
+        private static readonly ulong s_adminGuild = 1096556224167825408;
 
         private readonly IServiceProvider _services;
         private readonly ILogger _logger;
@@ -40,17 +41,16 @@ namespace InnoTasker
         public async Task OnClientReady()
         {
             await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
-            if (Program.IsDebug())
+
+            if (InnoTasker.IsDebug())
             {
                 await _interactionService.AddModulesToGuildAsync(s_testGuild, true, _interactionService.Modules.ToArray());
             }
             else
             {
-                await _interactionService.AddModulesGloballyAsync(true, _interactionService.Modules.ToArray());
+                await _interactionService.AddModulesGloballyAsync(true, _interactionService.Modules.Where(x => x.Name != "BotAdminModule").ToArray());
+                await _interactionService.AddModulesToGuildAsync(s_adminGuild, true, _interactionService.GetModuleInfo<BotAdminModule>());
             }
-
-            ModuleInfo botAdmin = await _interactionService.AddModuleAsync(typeof(BotAdminModule), _services);
-            await _interactionService.AddModulesToGuildAsync(s_testGuild, true, botAdmin);
 
             await _logger.LogAsync(LogSeverity.Info, this, $"InteractionHandler Initialized!");
         }

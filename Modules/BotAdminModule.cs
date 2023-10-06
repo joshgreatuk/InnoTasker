@@ -10,14 +10,15 @@ namespace InnoTasker.Modules
 {
     using Discord;
     using Discord.WebSocket;
-    using InnoTasker.Data.Admin;
-    using InnoTasker.Data.ToDo;
-    using InnoTasker.Services.Interfaces;
+    using global::InnoTasker.Data.Admin;
+    using global::InnoTasker.Data.ToDo;
+    using global::InnoTasker.Services.Interfaces;
     using Preconditions;
     using System.ComponentModel;
 
     [DontAutoRegister]
     [RequireBotAdmin]
+    [Group("botadmin", "These are bot admin commands, dont even try")]
     public class BotAdminModule : InnoModuleBase
     {
         private readonly IAdminService _adminService;
@@ -32,17 +33,20 @@ namespace InnoTasker.Modules
             _guildService = guildService;
         }
 
+        [SlashCommand("set-post-channel", "Users cannot run this")]
         public async Task SetPostChannel(AdminPostType type, ITextChannel channel=null)
         {
             await _adminService.SetPostChannel(type, channel.Guild, channel);
         }
 
+        [SlashCommand("refresh-list", "Users cannot run this")]
         public async Task RefreshList(string supportID)
         {
             SupportInfo info = Support.ParseSupportID(supportID);
             await _adminService.RefreshList(info.guildID, info.listName);
         }
 
+        [SlashCommand("lookup-list", "Users cannot run this")]
         public async Task LookupList(string supportID)
         {
             SupportInfo info = Support.ParseSupportID(supportID);
@@ -52,6 +56,7 @@ namespace InnoTasker.Modules
             await FollowupAsync(embed: (await GenerateListInfo(list, info)).Build());
         }
 
+        [SlashCommand("lookup-list-detailed", "Users cannot run this")]
         public async Task LookupListDetailed(string supportID)
         {
             SupportInfo info = Support.ParseSupportID(supportID);
@@ -61,13 +66,36 @@ namespace InnoTasker.Modules
             await FollowupAsync(embeds: (await GenerateItemInfo(list, info)).Select(x => x.Build()).Take(10).ToArray());
         }
 
-        [ComponentInteraction("botadmin-refresh-*")]
+        [SlashCommand("lookup-item", "Users cannot run this")]
+        public async Task LookupItem(string supportID, int taskID)
+        {
+            SupportInfo info = Support.ParseSupportID(supportID);
+            ToDoList list = await _guildService.GetToDoList(info.guildID, info.listName);
+            success = false;
+
+            ToDoItem? item = list.Items.FirstOrDefault(x => x.ID == taskID);
+            if (item == null)
+            {
+                await FollowupAsync(embeds: new[] { new EmbedBuilder().WithTitle("Item doesnt exist").WithColor(Color.Red).Build() });
+                return;
+            }
+
+            await FollowupAsync(embeds: new[] { (await GenerateListInfo(list, info)).Build(),
+                new EmbedBuilder()
+                .WithTitle($"Item #{item.ID} ({item.Name}) info")
+                .WithDescription(string.Join("\n", DumpItemFields(item)))
+                .Build() });
+        }
+
+        [ComponentInteraction("botadmin-refresh-*", true)]
         public async Task HandlePostUpdateRequest()
         {
             if (Context.Interaction is not IComponentInteraction interaction) return;
 
             AdminPostType postType = (AdminPostType)Enum.Parse(typeof(AdminPostType), interaction.Data.CustomId.Split("-").Last());
             await _adminService.UpdatePost(postType);
+
+            success = false;
         }
 
         public async Task<EmbedBuilder> GenerateListInfo(ToDoList list, SupportInfo info)
@@ -87,7 +115,7 @@ namespace InnoTasker.Modules
             List<EmbedBuilder> embeds = new();
             embeds.Add(await GenerateListInfo(list, info));
 
-            int currentPage = 1;
+            int currentPage = 0;
             int lastPage = (int)MathF.Ceiling(list.Items.Count / 25);
             EmbedBuilder currentBuilder = null;
             for (int i=0; i < list.Items.Count; i++)
@@ -122,13 +150,13 @@ namespace InnoTasker.Modules
                 $"**ListChannel:** {list.ListChannelID} - {list.ListChannel.Name}",
                 $"**CommandChannel:** {list.CommandChannelID} - {list.CommandChannel.Name}",
                 $"**ForumChannel:** {list.ForumChannelID} - {list.ForumChannel.Name}",
-                $"**Categories:** {list.Categories}",
-                $"**Stages:** {list.Stages}",
+                $"**Categories:** {String.Join(", ", list.Categories)}",
+                $"**Stages:** {String.Join(", ", list.Stages)}",
                 $"**MessageChannel:** {list.MessageChannelID} - {list.MessageChannel.Name}",
                 $"**Message:** {list.MessageID}",
                 $"**ItemCount (Total/Complete):** {list.Items.Count}/{list.Items.Count(x => x.IsComplete)}",
-                $"**UserPermissions:** {list.UserPermissions}",
-                $"**RolePermissions:** {list.RolePermissions}",
+                $"**UserPermissions:** {String.Join(", ", list.UserPermissions)}",
+                $"**RolePermissions:** {String.Join(", ", list.RolePermissions)}",
             };
         }
 
@@ -139,15 +167,15 @@ namespace InnoTasker.Modules
                 $"**ID:** {item.ID}",
                 $"**Name:** {item.Name}",
                 $"**Description:** {item.Description}",
-                $"**Categories:** {item.Categories}",
-                $"**Stages:** {item.Stages}",
+                $"**Categories:** {String.Join(", ", item.Categories)}",
+                $"**Stages:** {String.Join(", ", item.Stages)}",
                 $"**IsComplete:** {item.IsComplete}",
-                $"**AssignedUsers:** {item.AssignedUsers}",
-                $"**ForumPost:** {item.ForumPostID} - {item.ForumPost.Name}",
+                $"**AssignedUsers:** {String.Join(", ", item.AssignedUsers)}",
+                $"**ForumPost:** {item.ForumPostID} - {(item.ForumPost != null ? item.ForumPost.Name : null)}",
                 $"**StatusMessage:** {item.StatusMessageID}",
                 $"**SorryMessage:** {item.SorryMessageID}",
                 $"**CachedToDoEntry:** {item.CachedToDoEntry}",
-                $"**ItemUpdateQueue:** {item.ItemUpdateQueue}",
+                $"**ItemUpdateQueue:** {String.Join(", ", item.ItemUpdateQueue)}",
             };
         }
     }

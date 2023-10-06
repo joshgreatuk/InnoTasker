@@ -167,11 +167,13 @@ namespace InnoTasker.Services.ToDo
         public async Task UpdateToDoItem(ulong guildID, ToDoList list, ToDoItem item, bool updateMessage = true)
         {
             //Create to-do item message
-            List<string> entries = new();
-            entries.Add($"#{item.ID}");
-            entries.Add($"{item.Name}");
-            entries.Add($"{string.Join(", ", item.Stages)}");
-            entries.Add($"{string.Join(", ", item.Categories)}");
+            List<string> entries = new()
+            {
+                $"#{item.ID}",
+                $"{item.Name}",
+                $"{string.Join(", ", item.Stages)}",
+                $"{string.Join(", ", item.Categories)}"
+            };
             if (await _toDoForumService.IsListForumEnabled(list) && item.ForumPost != null)
             {
                 entries.Add($"{MentionUtils.MentionChannel(item.ForumPost.Id)}");
@@ -295,6 +297,7 @@ namespace InnoTasker.Services.ToDo
             Embed messageEmbed = new EmbedBuilder().WithTitle("Sorry!")
                 .WithDescription("InnoTasker is currently down for maintenence. Sorry for the inconvenience <3")
                 .WithCurrentTimestamp()
+                .WithColor(Color.Red)
                 .Build();
             foreach (RestUserMessage listMessage in await _guildService.GetListMessages())
             {

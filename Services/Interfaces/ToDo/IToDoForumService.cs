@@ -25,7 +25,7 @@ namespace InnoTasker.Services.Interfaces.ToDo
         public Task RemoveUserTaskPost(ToDoItem item, IGuildUser user);
 
         public Task UpdateStatusMessage(ToDoItem item);
-        public Task<IUserMessage> ProcessUpdateMessages(ToDoItem item);
+        public Task<IUserMessage> ProcessUpdateMessages(ToDoItem item, Color? colour=null);
         
         public Task Shutdown();
     }

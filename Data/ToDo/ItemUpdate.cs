@@ -68,7 +68,7 @@ namespace InnoTasker.Data.ToDo
             this.context = context;
         }
 
-        public string GetMessage()
+        public override string ToString()
         {
             if (updateMessages.TryGetValue(updateType, out string message))
             {

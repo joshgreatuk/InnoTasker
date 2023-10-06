@@ -125,8 +125,10 @@ namespace InnoTasker.Services.ToDo
             }
         }
 
-        public async Task<Embed> CreateStatusMessage(ToDoItem item)
+        public async Task<Embed> CreateStatusMessage(ToDoItem item, Color? colour=null)
         {
+            if (colour == null) colour = Color.Default;
+
             List<string> statusFields = new()
             {
                 $"ID: {item.ID}",
@@ -139,17 +141,21 @@ namespace InnoTasker.Services.ToDo
             return new EmbedBuilder()
                 .WithTitle($"#{item.ID} | {item.Name}")
                 .WithDescription(string.Join("\n", statusFields))
+                .WithColor((Color)colour)
                 .Build();
         }
 
-        public async Task<IUserMessage> ProcessUpdateMessages(ToDoItem item)
+        public async Task<IUserMessage> ProcessUpdateMessages(ToDoItem item, Color? colour=null)
         {
             if (!await DoesTaskPostExist(item)) return null;
+
+            if (colour == null) colour = Color.Default;
 
             //Get message from ItemUpdate.GetMessage()
             IUserMessage message = await item.ForumPost.SendMessageAsync(embed: new EmbedBuilder()
                 .WithTitle($"Task Updates:")
-                .WithDescription(string.Join("\n", item.ItemUpdateQueue.Select(x => x.GetMessage())))
+                .WithDescription(string.Join("\n", item.ItemUpdateQueue.Select(x => x.ToString())))
+                .WithColor((Color)colour)
                 .Build());
             
             item.ItemUpdateQueue.Clear();
@@ -163,8 +169,9 @@ namespace InnoTasker.Services.ToDo
                 .Result.SelectMany(x => x.Lists.Where(x => IsListForumEnabled(x).Result)
                 .SelectMany(x => x.Items.Where(x => x.ForumPost != null))))
             {
+                if (item.ItemUpdateQueue.Count > 0 ) await ProcessUpdateMessages(item); //Hack so that only bot offline message is red
                 item.ItemUpdateQueue.Enqueue(new ItemUpdate(ItemUpdateType.BotShutdown, string.Empty));
-                item.SorryMessage = await ProcessUpdateMessages(item);
+                item.SorryMessage = await ProcessUpdateMessages(item, Color.Red);
                 item.SorryMessageID = item.SorryMessage.Id;
             }
             await _logger.LogAsync(LogSeverity.Info, this, "Apologized in forum posts");

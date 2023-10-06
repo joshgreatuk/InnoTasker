@@ -43,7 +43,7 @@ namespace InnoTasker.Modules
         }
 
         [SlashCommand("opensettingsmenu", "Open a to-do list's settings menu")]
-        public async Task OpenToDoSettingsMenu([Autocomplete(typeof(ToDoListAutocomplete))] string toDoName)
+        public async Task OpenToDoSettingsMenu([Autocomplete(typeof(ListAutocomplete))] string toDoName)
         {
             if (!await _toDoSettingsService.OpenSettings(Context.Interaction, toDoName, ToDoSettingsContext.Existing))
             {
@@ -65,7 +65,7 @@ namespace InnoTasker.Modules
         }
 
         [SlashCommand("delete-todolist", "Delete a to-do list")]
-        public async Task DeleteToDoList([Autocomplete(typeof(ToDoListAutocomplete))] string toDoName)
+        public async Task DeleteToDoList([Autocomplete(typeof(ListAutocomplete))] string toDoName)
         {
             await FollowupAsync(ephemeral: true, embed: new EmbedBuilder()
                 .WithTitle("Are you sure?")

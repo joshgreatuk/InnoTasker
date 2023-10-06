@@ -31,8 +31,10 @@ namespace InnoTasker.Services.Admin
 
             _adminPageBuilders = new()
             {
-                { AdminPostType.GuildService, new GuildServiceStatsPageBuilder(_services.GetRequiredService<IGuildService>()) },
-                { AdminPostType.ServerStats, new ServerStatsPageBuilder() }
+                { AdminPostType.GuildService, new GuildServiceStatsPageBuilder(
+                    _services.GetRequiredService<GuildDatabase>(),
+                    _services.GetRequiredService<IGuildService>()) },
+                { AdminPostType.ServerStats, new ServerStatsPageBuilder(_logger) }
             };
         }
 
@@ -40,7 +42,7 @@ namespace InnoTasker.Services.Admin
 
         public async Task Init()
         {
-            _updateTimer = new Timer(async x => await UpdatePosts(), null, TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
+            _updateTimer = new Timer(async x => await UpdatePosts(), null, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(5));
             await _logger.LogAsync(LogSeverity.Info, this, $"Initialized!");
         }
 
@@ -54,7 +56,7 @@ namespace InnoTasker.Services.Admin
 
         public async Task UpdatePost(AdminPostType type)
         {
-            if (!_adminPosts.TryGetValue(type, out AdminPost post)) return;
+            if (!_adminPosts.TryGetValue((int)type, out AdminPost post)) return;
             await UpdatePost(post);
         }
 
@@ -64,6 +66,7 @@ namespace InnoTasker.Services.Admin
             if (post.Channel == null || post.Guild == null) return;
 
             MessageContext message = await pageBuilder.BuildPage(null);
+            message.component.WithButton("Refresh", $"botadmin-refresh-{post.Type}");
 
             try
             {
@@ -75,15 +78,16 @@ namespace InnoTasker.Services.Admin
                 //Post new message
                 post.Message = await post.Channel.SendMessageAsync(embed: message.embed, components: message.component.Build());
                 post.MessageID = post.Message.Id;
+                _adminPosts.Save((int)post.Type);
             }
         }
 
         public async Task SetPostChannel(AdminPostType type, IGuild guild, ITextChannel channel)
         {
-            if (!_adminPosts.TryGetValue(type, out AdminPost post))
+            if (!_adminPosts.TryGetValue((int)type, out AdminPost post))
             {
                 post = new(type);
-                _adminPosts.Add(type, post);
+                _adminPosts.Add((int)type, post);
             }
 
             post.Guild = guild;
@@ -97,6 +101,8 @@ namespace InnoTasker.Services.Admin
                 post.Message = null;
                 post.MessageID = null;
             }
+
+            _adminPosts.Save((int)post.Type);
 
             await UpdatePost(type);
         }
@@ -114,8 +120,8 @@ namespace InnoTasker.Services.Admin
                 if (post.Message == null) continue;
 
                 List<Embed> embeds = post.Message.Embeds.Select(x => (Embed)x).ToList();
-                embeds.Add(new EmbedBuilder().WithTitle("Bot Offline").Build());
-                await post.Message.ModifyAsync(x => embeds.ToArray());
+                embeds.Add(new EmbedBuilder().WithTitle($"Bot Offline").WithColor(Color.Red).Build());
+                await post.Message.ModifyAsync(x => { x.Embeds = embeds.ToArray(); x.Components = new ComponentBuilder().Build(); });
             }
         }
     }

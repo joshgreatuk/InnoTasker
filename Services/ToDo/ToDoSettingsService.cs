@@ -216,7 +216,7 @@ namespace InnoTasker.Services.ToDo
             //Close all settings instances and leave a message saying sorry :P
             foreach (ToDoSettingsInstance instance in toDoSettingsInstances.ToList())
             {
-                await CloseInstance(instance, "Closed for bot maintenence. Sorry for the inconvenience <3");
+                await CloseInstance(instance, "Closed for bot maintenence. Sorry for the inconvenience <3", Color.Red);
             }
             toDoSettingsInstances.Clear();
             await _logger.LogAsync(LogSeverity.Info, this, $"All ToDoSettingsInstances closed");
@@ -224,14 +224,18 @@ namespace InnoTasker.Services.ToDo
 
         public async Task CloseInstance(ulong interactionID, string? message=null) => await CloseInstance(await GetSettingsInstance(interactionID), message);
 
-        public async Task CloseInstance(ToDoSettingsInstance instance, string? message=null)
+        public async Task CloseInstance(ToDoSettingsInstance instance, string? message=null, Color? colour=null)
         {
+            if (colour == null) colour = Color.Default;
+
             toDoSettingsInstances.Remove(instance);
             if (message != null && instance.message != null)
             {
                 //Instead of removing instance message, replace it with a sorry message
                 EmbedBuilder newEmbed = new EmbedBuilder().WithTitle("Sorry!")
-                    .WithDescription(message);
+                    .WithDescription(message)
+                    .WithColor((Color)colour)
+                    .WithCurrentTimestamp();
                 await instance.message.ModifyAsync(x => { x.Embed = newEmbed.Build(); x.Components = null; });
                 await _logger.LogAsync(LogSeverity.Debug, this, $"Closed instance {instance.interactionID} with message specified");
             }
