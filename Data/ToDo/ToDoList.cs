@@ -37,5 +37,7 @@ namespace InnoTasker.Data.ToDo
 
         public async Task<ToDoItem> GetToDoItem(int id) => Items.FirstOrDefault(x => x.ID == id);
         public async Task<ToDoItem> GetToDoItem(string itemName) => Items.FirstOrDefault(x => x.Name == itemName);
+
+        public async Task<ToDoItem?> GetToDoItemFromChannel(ulong channelID) => Items.FirstOrDefault(x => x.ForumPostID == channelID);
     }
 }

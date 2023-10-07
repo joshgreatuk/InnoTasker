@@ -10,10 +10,11 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InnoTasker.Modules
+namespace InnoTasker.Modules.ToDo
 {
     using global::InnoTasker.Services.Interfaces;
     using Preconditions;
+    using Preconditions.Parameters;
 
     [Group("to-do-admin", "Admin commands for a to-do list")]
     [DoListUserPermissionCheck(ListUserPermissions.Admin)]
@@ -34,8 +35,24 @@ namespace InnoTasker.Modules
             await FollowupAsync(embed: new EmbedBuilder()
                 .WithTitle("Your support ID")
                 .WithDescription($"**{infoID}**\n\nWe recommend that you do not share this ID with anyone but the InnoTasker support team")
-                .Build(), 
+                .Build(),
                 ephemeral: true);
+        }
+
+        [SlashCommand("add-user", "Add a user to a to-do task")]
+        public async Task AddUser(
+            [RequireItemExists] int taskID,
+            IGuildUser user)
+        {
+            await _updateService.TaskAddUser(Context.Guild.Id, listName, taskID, user);
+        }
+
+        [SlashCommand("remove-user", "Remove a user from a to-do task")]
+        public async Task RemoveUser(
+            [RequireItemExists] int taskID,
+            IGuildUser user)
+        {
+            await _updateService.TaskRemoveUser(Context.Guild.Id, listName, taskID, user);
         }
     }
 }

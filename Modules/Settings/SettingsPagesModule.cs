@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InnoTasker.Modules
+namespace InnoTasker.Modules.Settings
 {
     //To handle generic interactions from the settings pages (next, previous, close)
     public class SettingsPagesModule : InnoModuleBase
@@ -40,7 +40,7 @@ namespace InnoTasker.Modules
                 ToDoSettingsInstance instance = await _settingsService.GetSettingsInstance(Context.Channel.Id);
                 if (instance.context is ToDoSettingsContext.New)
                 {
-                    
+
                 }
                 await _toDoService.UpdateToDoList(instance.guildID, instance.toDoListName, instance.categoriesRenamed, instance.stagesRenamed);
                 await _settingsService.CloseInstance(Context.Channel.Id);

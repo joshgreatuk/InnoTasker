@@ -6,6 +6,12 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Modules.Preconditions.Parameters
 {
+    public enum LimitType
+    {
+        Name,
+        Description
+    }
+
     public class Limit
     {
         public string name;
@@ -20,7 +26,9 @@ namespace InnoTasker.Modules.Preconditions.Parameters
 
     public static class Limits
     {
-        public static Limit nameLimit = new("name", 32);
-        public static Limit descLimit = new("description", 128);
+        public static Dictionary<LimitType, Limit> limits = new()
+        {
+
+        };
     }
 }

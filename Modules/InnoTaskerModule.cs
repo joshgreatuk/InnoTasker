@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace InnoTasker.Modules
 {
-    [Group("innotasker", "")]
+    [Group("innotasker", "Innotasker bot commands")]
     public class InnoTaskerModule
     {
-
+        
     }
 }
