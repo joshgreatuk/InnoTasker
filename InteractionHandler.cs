@@ -19,10 +19,14 @@ namespace InnoTasker
         private static readonly ulong s_testGuild = 1096556224167825408;
         private static readonly ulong s_adminGuild = 1096556224167825408;
 
+        private static readonly TimeSpan s_userCooldown = TimeSpan.FromSeconds(3);
+
         private readonly IServiceProvider _services;
         private readonly ILogger _logger;
         private readonly DiscordSocketClient _client;
         private readonly InteractionService _interactionService;
+
+        private Dictionary<ulong, DateTime> userCooldowns = new();
 
         public InteractionHandler(IServiceProvider services)
         {
@@ -57,6 +61,21 @@ namespace InnoTasker
 
         public async Task OnInteraction(SocketInteraction interaction)
         {
+            if (userCooldowns.TryGetValue(interaction.User.Id, out DateTime cooldownTime))
+            {
+                if (cooldownTime.Add(s_userCooldown) > DateTime.UtcNow)
+                {
+                    await interaction.RespondAsync(embed: new EmbedBuilder()
+                        .WithTitle("Woah there!")
+                        .WithDescription("Sorry, there is a 3 second cooldown on commands per user")
+                        .WithCurrentTimestamp()
+                        .Build(), ephemeral: true);
+                    return;
+                }
+                userCooldowns.Remove(interaction.User.Id);
+            }
+            userCooldowns.Add(interaction.User.Id, DateTime.UtcNow);
+
             try
             {
                 SocketInteractionContext context = new(_client, interaction);
