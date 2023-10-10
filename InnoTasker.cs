@@ -11,7 +11,6 @@ using System;
 using System.Diagnostics;
 using InnoTasker.Services.Interfaces.Admin;
 using InnoTasker.Services.Admin;
-using System.Runtime.CompilerServices;
 
 namespace InnoTasker
 {
@@ -48,12 +47,12 @@ namespace InnoTasker
                 GatewayIntents = GatewayIntents.AllUnprivileged & ~GatewayIntents.GuildInvites & ~GatewayIntents.GuildScheduledEvents
             };
 
-            string basePath = $"{Directory.GetCurrentDirectory()}\\";
+            string basePath = $"{Directory.GetCurrentDirectory()}/";
             string[] dataDirs = new string[]
             {
-                "Data\\",
-                "Data\\GuildData\\",
-                "Data\\UserEmojis\\"
+                "Data/",
+                "Data/GuildData/",
+                "Data/UserEmojis/"
             };
 
             foreach (string dir in dataDirs)
@@ -69,9 +68,9 @@ namespace InnoTasker
                 .AddSingleton<InteractionHandler>()
 
                 //Databases
-                .AddSingleton(x => new GuildDatabase(x, $"{basePath}\\Data\\GuildData\\"))
-                .AddSingleton(x => new UserEmojiDatabase(x, $"{basePath}\\Data\\UserEmojis\\"))
-                .AddSingleton(x => new AdminPostDatabase(x, $"{basePath}\\Data\\AdminPosts\\"))
+                .AddSingleton(x => new GuildDatabase(x, $"{basePath}/Data/GuildData/"))
+                .AddSingleton(x => new UserEmojiDatabase(x, $"{basePath}/Data/UserEmojis/"))
+                .AddSingleton(x => new AdminPostDatabase(x, $"{basePath}/Data/AdminPosts/"))
 
                 //Bot Services
                 .AddSingleton<IGuildService, GuildService>()

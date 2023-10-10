@@ -58,7 +58,7 @@ namespace InnoTasker.Services
             }
 
             string logName = $"{DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")}.log";
-            string logPath = Directory.GetCurrentDirectory() + "\\Logs\\";
+            string logPath = Directory.GetCurrentDirectory() + "/Logs/";
             if (!Directory.Exists(logPath)) Directory.CreateDirectory(logPath);
             logPath += logName;
             logStream = File.OpenWrite(logPath);
