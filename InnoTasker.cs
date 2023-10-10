@@ -128,10 +128,10 @@ namespace InnoTasker
             _logger.LogAsync(LogSeverity.Info, this, "Bot shutdown started");
 
             Task.WaitAll(
-                _services.GetRequiredService<IToDoSettingsService>().Shutdown(),
-                _services.GetRequiredService<IToDoListService>().Shutdown(),
-                _services.GetRequiredService<IToDoForumService>().Shutdown(),
-                _services.GetRequiredService<IAdminService>().Shutdown()
+                TryTask(_services.GetRequiredService<IToDoSettingsService>().Shutdown()),
+                TryTask(_services.GetRequiredService<IToDoListService>().Shutdown()),
+                TryTask(_services.GetRequiredService<IToDoForumService>().Shutdown()),
+                TryTask(_services.GetRequiredService<IAdminService>().Shutdown())
             );
 
             //Save anything that needs saving, etc
@@ -141,11 +141,33 @@ namespace InnoTasker
                 _services.GetRequiredService<UserEmojiDatabase>(),
                 _services.GetRequiredService<AdminPostDatabase>()
             };
-            foreach (IDatabase database in toSave) database.Save();
+            foreach (IDatabase database in toSave)
+            {
+                try
+                {
+                    database.Save();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogAsync(LogSeverity.Error, this, $"There was a problem saving database '{database.GetType().Name}'", ex);
+                }
+            }
 
             programTimer.Stop();
             _logger.LogAsync(LogSeverity.Info, this, $"InnoTasker has shutdown successfully in {programTimer.ElapsedMilliseconds}ms <3");
             _logger.Shutdown();
+        }
+
+        public async Task TryTask(Task action)
+        {
+            try
+            {
+                await action;
+            }
+            catch (Exception ex)
+            {
+                await _logger.LogAsync(LogSeverity.Error, this, $"There was a problem trying a task", ex);
+            }
         }
 
         public static bool IsDebug()
