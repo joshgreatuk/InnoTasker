@@ -17,6 +17,7 @@ namespace InnoTasker.Modules.ToDo
     using Preconditions.Parameters;
 
     [Group("to-do-admin", "Admin commands for a to-do list")]
+    [RequireUserPermission(GuildPermission.Administrator)]
     [DoListUserPermissionCheck(ListUserPermissions.Admin)]
     public class ToDoAdminModule : ToDoModuleBase
     {

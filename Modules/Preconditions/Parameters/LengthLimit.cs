@@ -28,7 +28,8 @@ namespace InnoTasker.Modules.Preconditions.Parameters
     {
         public static Dictionary<LimitType, Limit> limits = new()
         {
-
+            { LimitType.Name, new Limit("name", 32) },
+            { LimitType.Description, new Limit("description", 256) },
         };
     }
 }

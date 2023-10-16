@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 namespace InnoTasker.Modules.ToDo
 {
     using Autocomplete;
+    using Discord;
     using global::InnoTasker.Services.Interfaces;
     using Preconditions;
     using Preconditions.Parameters;
@@ -18,7 +19,8 @@ namespace InnoTasker.Modules.ToDo
     public class ToDoModule : ToDoModuleBase
     {
         public ToDoModule(IGuildService guildService, IToDoUpdateService updateService) : base(guildService, updateService) { }
-
+        
+        [RequireUserPermission(GuildPermission.Administrator)]
         [DoListUserPermissionCheck(ListUserPermissions.Editor)]
         public class ToDoModuleEditor : ToDoModuleBase
         {
@@ -105,6 +107,7 @@ namespace InnoTasker.Modules.ToDo
             }
         }
 
+        [RequireUserPermission(GuildPermission.Administrator)]
         [DoListUserPermissionCheck(ListUserPermissions.User)]
         public class ToDoModuleUser : ToDoModuleBase
         {
