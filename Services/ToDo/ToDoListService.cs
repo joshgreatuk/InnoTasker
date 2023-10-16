@@ -8,7 +8,6 @@ using InnoTasker.Services.Interfaces.ToDo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -128,36 +127,124 @@ namespace InnoTasker.Services.ToDo
                 return;
             }
 
-            List<Embed> listEmbeds = await CreateToDoEmbed(list);
+            /* 16/10/23 - New listing code
+             * - Split items into lists by main sortBy
+             * - Sort items in their lists by rest of sortBys in order
+             * - Create list info
+             * - Check if list channel has changed
+             *   - If so, delete old messages (flatten)
+             * - Create message lists for embeds
+             * - Go through and add embeds to the messages, creating new fields per description limit
+             *   and creating new messages per embed limit
+             * - Check for existing messages in order
+             * - If there is too many existing messages, delete them until there is enough messages (flatten with next requests)
+             * - Create message creation/modification requests (flatten)
+             * - Take note of message objects and IDs and replace the list's message list
+             */
 
-            if (list.Message != null && list.MessageChannel != null && list.MessageChannel != list.ListChannel)
+            //Sorting
+            Dictionary<string, ToDoListField> fields = new();
+            foreach (ToDoItem item in list.Items)
             {
-                //Delete the old message
-                await list.MessageChannel.DeleteMessageAsync(list.Message);
-                list.Message = null;
-                list.MessageID = null;
+                if (list.MainSortBy.SortType is MainListSortType.Category or MainListSortType.Stage)
+                {
+                    List<string> sortBy = list.MainSortBy.SortType is MainListSortType.Category
+                        ? (item.Categories.Count > 0 ? item.Categories : new() { "No Category" })
+                        : (item.Stages.Count > 0 ? item.Stages : new() { "No Stage" });
+                    foreach (string field in sortBy)
+                    {
+                        if (!fields.TryGetValue(field, out ToDoListField fieldToDo))
+                        {
+                            fieldToDo = new() { fieldName = "field" };
+                            fields.Add(field, fieldToDo);
+                        }
+
+                        fieldToDo.sortedItems.Add(item);
+                    }
+                }
+            }
+
+            List<ToDoListField> listFields = list.MainSortBy.SortType is MainListSortType.None 
+                ? new() { new(list.Items.ToList()) } 
+                : fields.Values.ToList();
+
+            if (list.MainSortBy.Direction is ListSortDirection.Descending) listFields.Reverse();
+
+            foreach (ToDoListField field in listFields)
+            {
+                field.sortedItems.OrderBy(list.SubSortBy.GetSubSortKey());
+                if (list.SubSortBy.Direction is ListSortDirection.Descending) field.sortedItems.Reverse();
+            }
+
+            //List info embed
+            List<string> infoItems = new()
+            {
+                $"**Name:** {list.Name}",
+                $"**Stages:** {string.Join(", ", list.Stages)}",
+                $"**Categories:** {string.Join(", ", list.Categories)}",
+                $"**Item count:** {list.Items.Count}",
+                $"**Completed items:** {list.Items.Count(x => x.IsComplete)}"
+            };
+
+            Embed infoEmbed = new EmbedBuilder()
+                .WithTitle($"To-Do List {list.Name} Info")
+                .WithDescription(string.Join("\n", infoItems))
+                .WithCurrentTimestamp()
+                .Build();
+
+            //List channel changed?
+            if (list.Messages.Count > 0 && list.MessageChannel != null && list.MessageChannel != list.ListChannel)
+            {
+                //Delete the old messages                
+                await list.MessageChannel.DeleteMessagesAsync(list.Messages.Values);
+
+                list.Messages.Clear();
+                list.MessageIDs.Clear();
                 list.MessageChannel = null;
                 list.MessageChannelID = null;
             }
 
-            //Check if the message exists
-            try 
+            List<ToDoListMessage> messages = new();
+            ToDoListMessage currentMessage = new();
+            currentMessage.embeds.Add(infoEmbed);
+            EmbedBuilder currentEmbed = new();
+            EmbedFieldBuilder currentField = new();
+
+            foreach (ToDoListField field in listFields)
             {
-                if (list.Message == null) throw new NullReferenceException();
-                await list.ListChannel.GetMessageAsync(list.Message.Id);
-            }
-            catch (Exception ex)
-            {
-                //Create the message then return
-                list.Message = await list.ListChannel.SendMessageAsync(embeds: listEmbeds.ToArray());
-                list.MessageID = list.Message.Id;
-                list.MessageChannel = list.ListChannel;
-                list.MessageChannelID = list.ListChannel.Id;
-                return;
+
             }
 
-            //Modify the message, it exists!
-            await list.Message.ModifyAsync(x => x.Embeds =  listEmbeds.ToArray());
+            //List<Embed> listEmbeds = await CreateToDoEmbed(list);
+
+            //if (list.Message != null && list.MessageChannel != null && list.MessageChannel != list.ListChannel)
+            //{
+            //    //Delete the old message
+            //    await list.MessageChannel.DeleteMessageAsync(list.Message);
+            //    list.Message = null;
+            //    list.MessageID = null;
+            //    list.MessageChannel = null;
+            //    list.MessageChannelID = null;
+            //}
+
+            ////Check if the message exists
+            //try 
+            //{
+            //    if (list.Message == null) throw new NullReferenceException();
+            //    await list.ListChannel.GetMessageAsync(list.Message.Id);
+            //}
+            //catch (Exception ex)
+            //{
+            //    //Create the message then return
+            //    list.Message = await list.ListChannel.SendMessageAsync(embeds: listEmbeds.ToArray());
+            //    list.MessageID = list.Message.Id;
+            //    list.MessageChannel = list.ListChannel;
+            //    list.MessageChannelID = list.ListChannel.Id;
+            //    return;
+            //}
+
+            ////Modify the message, it exists!
+            //await list.Message.ModifyAsync(x => x.Embeds =  listEmbeds.ToArray());
         }
 
         public async Task UpdateToDoItem(ulong guildID, string listName, int itemID) => 
@@ -196,47 +283,47 @@ namespace InnoTasker.Services.ToDo
             }
         }
 
-        public async Task<List<Embed>> CreateToDoEmbed(ToDoList list)
-        {
-            List<string> infoItems = new()
-            {
-                $"**Name:** {list.Name}",
-                $"**Stages:** {string.Join(", ", list.Stages)}",
-                $"**Categories:** {string.Join(", ", list.Categories)}",
-                $"**Item count:** {list.Items.Count}",
-                $"**Completed items:** {list.Items.Count(x => x.IsComplete)}"
-            };
+        //public async Task<List<Embed>> CreateToDoEmbed(ToDoList list)
+        //{
+        //    List<string> infoItems = new()
+        //    {
+        //        $"**Name:** {list.Name}",
+        //        $"**Stages:** {string.Join(", ", list.Stages)}",
+        //        $"**Categories:** {string.Join(", ", list.Categories)}",
+        //        $"**Item count:** {list.Items.Count}",
+        //        $"**Completed items:** {list.Items.Count(x => x.IsComplete)}"
+        //    };
 
-            //Default sorting is by:
-            //1. Completed
-            //2. Stage
-            //3. Category
-            //4. ID
+        //    //Default sorting is by:
+        //    //1. Completed
+        //    //2. Stage
+        //    //3. Category
+        //    //4. ID
 
-            list.Items.OrderBy(x => x.IsComplete).ThenBy(x => x.Stages.OrderBy(x => list.Stages.IndexOf(x)).First())
-                .ThenBy(x => x.Categories.OrderBy(x => list.Categories.IndexOf(x)).First()).ThenBy(x => x.ID);
+        //    list.Items.OrderBy(x => x.IsComplete).ThenBy(x => x.Stages.OrderBy(x => list.Stages.IndexOf(x)).First())
+        //        .ThenBy(x => x.Categories.OrderBy(x => list.Categories.IndexOf(x)).First()).ThenBy(x => x.ID);
 
-            List<string> itemMessages = list.Items.Select(x => x.CachedToDoEntry).ToList();
+        //    List<string> itemMessages = list.Items.Select(x => x.CachedToDoEntry).ToList();
 
-            //List info as first embed
-            //Subsequent embeds must be split by items limit
-            List<Embed> embeds = new()
-            {
-                new EmbedBuilder()
-                .WithTitle($"To-Do list {list.Name} info")
-                .WithDescription(string.Join("\n", infoItems))
-                .WithCurrentTimestamp()
-                .Build(),
+        //    //List info as first embed
+        //    //Subsequent embeds must be split by items limit
+        //    List<Embed> embeds = new()
+        //    {
+        //        new EmbedBuilder()
+        //        .WithTitle($"To-Do list {list.Name} info")
+        //        .WithDescription(string.Join("\n", infoItems))
+        //        .WithCurrentTimestamp()
+        //        .Build(),
 
-                new EmbedBuilder()
-                .WithTitle($"To-Do list {list.Name}")
-                .WithDescription(string.Join("\n", itemMessages))
-                .WithCurrentTimestamp()
-                .Build()
-            };
+        //        new EmbedBuilder()
+        //        .WithTitle($"To-Do list {list.Name}")
+        //        .WithDescription(string.Join("\n", itemMessages))
+        //        .WithCurrentTimestamp()
+        //        .Build()
+        //    };
 
-            return embeds;
-        }
+        //    return embeds;
+        //}
 
         public async Task AddToDoList(ulong guildID, ToDoList list)
         {
@@ -249,13 +336,13 @@ namespace InnoTasker.Services.ToDo
             ToDoList list = await _guildService.GetToDoList(guildID, toDoName);
             await _guildService.RemoveList(guildID, toDoName);
 
-            if (list.Message == null) return;
+            if (list.Messages.Count < 1) return;
             Embed statusEmbed = new EmbedBuilder()
                 .WithTitle("List Archived")
                 .WithDescription("This list can no longer be updated/used, feel free to delete the message/channels")
                 .WithCurrentTimestamp()
                 .Build();
-            await AddStatusMessage(list.Message, statusEmbed);
+            await AddStatusMessage(list.Messages[list.MessageIDs.Last()], statusEmbed);
         }
 
         public async Task AddToDoItem(ulong guildID, string listName, ToDoItem item) =>

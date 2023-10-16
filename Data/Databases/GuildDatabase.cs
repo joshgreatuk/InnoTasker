@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
 using InnoTasker.Data.ToDo;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -30,8 +31,11 @@ namespace InnoTasker.Data.Databases
 
                 list.MessageChannel = list.MessageChannelID != null ? 
                     targetGuild.GetTextChannel((ulong)list.MessageChannelID) : null;
-                list.Message = list.MessageID != null && list.MessageChannel != null ? 
-                    list.MessageChannel.ModifyMessageAsync((ulong)list.MessageID, x => x.Content = "").Result : null;
+                if (list.MessageChannel != null && list.MessageIDs.Count > 0) 
+                { //TO-DO: This is a serious rate-limit risk
+                    List<IUserMessage> messages = list.MessageIDs.Select(x => list.MessageChannel.ModifyMessageAsync(x, y => y.Content = "").Result).ToList();
+                    foreach (IUserMessage message in messages) list.Messages.Add(message.Id, message);
+                }
             
                 foreach (ToDoItem item in list.Items)
                 {

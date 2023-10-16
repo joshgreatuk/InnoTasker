@@ -126,7 +126,7 @@ namespace InnoTasker.Services
         }
 
         public async Task<List<IUserMessage>> GetListMessages() =>
-            _guildDatabase.Values.SelectMany(x => x.Lists.Where(x => x.Message != null).Select(x => x.Message)).ToList();
+            _guildDatabase.Values.SelectMany(x => x.Lists.Where(x => x.Messages.Count > 0).Select(x => x.Messages[x.MessageIDs.Last()])).ToList();
 
         public async Task<List<GuildData>> GetGuildDataList() => _guildDatabase.Values.ToList();
     }

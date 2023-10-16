@@ -153,7 +153,7 @@ namespace InnoTasker.Modules
                 $"**Categories:** {String.Join(", ", list.Categories)}",
                 $"**Stages:** {String.Join(", ", list.Stages)}",
                 $"**MessageChannel:** {list.MessageChannelID} - {list.MessageChannel.Name}",
-                $"**Message:** {list.MessageID}",
+                $"**Messages:** {string.Join(", ", list.MessageIDs)}",
                 $"**ItemCount (Total/Complete):** {list.Items.Count}/{list.Items.Count(x => x.IsComplete)}",
                 $"**UserPermissions:** {String.Join(", ", list.UserPermissions)}",
                 $"**RolePermissions:** {String.Join(", ", list.RolePermissions)}",

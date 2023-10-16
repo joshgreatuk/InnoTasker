@@ -28,9 +28,16 @@ namespace InnoTasker.Data.ToDo
 
         public ulong? MessageChannelID { get; set; }
         [JsonIgnore] public ITextChannel? MessageChannel { get; set; }
-        public ulong? MessageID;
-        [JsonIgnore] public IUserMessage? Message { get; set; }
+
+        //public ulong? MessageID;
+        //[JsonIgnore] public IUserMessage? Message { get; set; }
+        public List<ulong> MessageIDs = new();
+        [JsonIgnore] public Dictionary<ulong, IUserMessage> Messages { get; set; } = new();
+
         public List<ToDoItem> Items { get; set; } = new();
+
+        public ListSortBy<MainListSortType> MainSortBy { get; set; } = new(MainListSortType.Category);
+        public ListSortBy<SubListSortType> SubSortBy { get; set; } = new(SubListSortType.Stage);
 
         public Dictionary<ulong, ListUserPermissions> UserPermissions { get; set; } = new();
         public Dictionary<ulong, ListUserPermissions> RolePermissions { get; set; } = new();
