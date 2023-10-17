@@ -43,6 +43,10 @@ namespace InnoTasker.Data.ToDo
         public Dictionary<ulong, ListUserPermissions> userPermissions = new();
         public Dictionary<ulong, ListUserPermissions> rolePermissions = new();
 
+        //SortBy Page
+        public ListSortBy<MainListSortType> mainSortBy = new();
+        public ListSortBy<SubListSortType> subSortBy = new();
+
         public ToDoSettingsInstance(ulong interactionID)
         {
             this.interactionID = interactionID;
@@ -61,6 +65,9 @@ namespace InnoTasker.Data.ToDo
 
             userPermissions = listData.UserPermissions;
             rolePermissions = listData.RolePermissions;
+
+            mainSortBy = listData.MainSortBy;
+            subSortBy = listData.SubSortBy;
         }
 
         public async Task SaveGuildSettings(IGuildService guildService)
@@ -85,6 +92,9 @@ namespace InnoTasker.Data.ToDo
 
             listData.UserPermissions = userPermissions;
             listData.RolePermissions = rolePermissions;
+
+            listData.MainSortBy = mainSortBy;
+            listData.SubSortBy = subSortBy;
         }
 
         public async Task<ToDoList> GetListData(IGuildService guildService)

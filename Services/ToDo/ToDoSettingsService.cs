@@ -34,7 +34,8 @@ namespace InnoTasker.Services.ToDo
             {
                 new ToDoSettingsChannelsBuilder(),
                 new ToDoSettingsCategoriesBuilder(),
-                new ToDoSettingsPermissionsBuilder()
+                new ToDoSettingsPermissionsBuilder(),
+                new ToDoSettingsSortByBuilder()
             };
 
             _client = client;

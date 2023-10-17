@@ -335,6 +335,44 @@ namespace InnoTasker.Modules.Settings
             await UpdateCurrentSettingsPage();
         }
 
+        [RequireSettingsInstance]
+        [SlashCommand("sortby-set-main", "Set the main SortBy filter on the list, used with '/admin opensettingsmenu'")]
+        public async Task SetMainSortBy(MainListSortType type)
+        {
+            ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
+            instance.mainSortBy.SortType = type;
+            await UpdateCurrentSettingsPage();
+        }
+
+        [RequireSettingsInstance]
+        [SlashCommand("sortby-set-sub", "Set the sub SortBy filter on the list, used with '/admin opensettingsmenu'")]
+        public async Task SetSubSortBy(SubListSortType type) 
+        {
+            ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
+            instance.subSortBy.SortType = type;
+            await UpdateCurrentSettingsPage();
+        }
+
+        public enum SortByRef { Main, Sub }
+
+        [RequireSettingsInstance]
+        [SlashCommand("sortby-toggle-direction", "Toggle the direction of a SortBy filter, used with '/admin opensettingsmenu'")]
+        public async Task ToggleSortByDirection(SortByRef type)
+        {
+            ToDoSettingsInstance instance = await _toDoSettingsService.GetSettingsInstance(Context.Channel.Id);
+            if (type is SortByRef.Main)
+            {
+                instance.mainSortBy.Direction = instance.mainSortBy.Direction is ListSortDirection.Ascending 
+                    ? ListSortDirection.Descending : ListSortDirection.Ascending;
+            }
+            else if (type is SortByRef.Sub)
+            {
+                instance.subSortBy.Direction = instance.subSortBy.Direction is ListSortDirection.Ascending 
+                    ? ListSortDirection.Descending : ListSortDirection.Ascending;
+            }
+            await UpdateCurrentSettingsPage();
+        }
+
         public async Task UpdateCurrentSettingsPage()
         {
             if (await _toDoSettingsService.InstanceExists(Context.Channel.Id))

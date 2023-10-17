@@ -207,13 +207,53 @@ namespace InnoTasker.Services.ToDo
             List<ToDoListMessage> messages = new();
             ToDoListMessage currentMessage = new();
             currentMessage.embeds.Add(infoEmbed);
-            EmbedBuilder currentEmbed = new();
-            EmbedFieldBuilder currentField = new();
+
+            List<EmbedFieldBuilder> currentFields = new();
+            string currentDescription = "";
 
             foreach (ToDoListField field in listFields)
             {
+                bool lastField = listFields.IndexOf(field) == listFields.Count - 1;
+                //Change field when description + next item is bigger than 4096 or when we run out of items in the field
+                for (int i=0; i < field.sortedItems.Count; i++)
+                {
+                    bool lastItem = i == field.sortedItems.Count;
 
+                    ToDoItem item = field.sortedItems[i];
+                    string plusString = item.CachedToDoEntry;
+                    string newDescription = currentDescription + $"{plusString}\n";
+
+                    if (lastItem || (currentDescription + $"{plusString}\n").Length >= 4096)
+                    {
+                        //Change field
+                        currentFields.Add(new EmbedFieldBuilder()
+                            .WithName($"{field.fieldName}")
+                            .WithValue(lastItem ? newDescription : currentDescription));
+                        currentDescription = "";
+
+                        if (currentFields.Count == 25 || lastItem)
+                        {
+                            currentMessage.embeds.Add(new EmbedBuilder()
+                                .WithTitle($"To-Do List {list.Name}")
+                                .WithFields(currentFields)
+                                .WithCurrentTimestamp()
+                                .Build());
+                            currentFields.Clear();
+
+                            if (currentMessage.embeds.Count == 10 || (lastItem && lastField))
+                            {
+                                messages.Add(currentMessage);
+                                currentMessage = new();
+                            }
+                        }
+
+                        currentDescription = newDescription;
+                    }
+                }
             }
+
+            //Check for and sort out existing messages
+
 
             //List<Embed> listEmbeds = await CreateToDoEmbed(list);
 
