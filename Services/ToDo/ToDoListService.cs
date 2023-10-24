@@ -107,12 +107,12 @@ namespace InnoTasker.Services.ToDo
             }
 
             await _guildService.SaveGuild(guildID);
-            await UpdateToDoListMessage(list);
+            await UpdateToDoListMessage(guildID, list);
         }
 
         public async Task UpdateToDoListMessage(ulong guildID, string listName) =>
-            await UpdateToDoListMessage(await _guildService.GetToDoList(guildID, listName));
-        public async Task UpdateToDoListMessage(ToDoList list)
+            await UpdateToDoListMessage(guildID, await _guildService.GetToDoList(guildID, listName));
+        public async Task UpdateToDoListMessage(ulong guildID, ToDoList list)
         {
             //Check that the channels still exist
             if (list.ListChannel == null) return;
@@ -252,7 +252,60 @@ namespace InnoTasker.Services.ToDo
                 }
             }
 
-            //Check for and sort out existing messages
+            //Check the messages still exist, if they dont remove it from the list
+            List<ulong> servicedMessages = new();
+            foreach (IUserMessage message in list.Messages.Values.ToList())
+            {
+                try
+                {
+                    await message.ModifyAsync(x => x.Content = "");
+                }
+                catch
+                {
+                    list.Messages.Remove(message.Id);
+                    list.MessageIDs.Remove(message.Id);
+                }
+                servicedMessages.Add(message.Id);
+            }
+
+            foreach (ulong lostID in list.MessageIDs.Where(x => !servicedMessages.Contains(x)).ToList())
+            {
+                list.MessageIDs.Remove(lostID);
+            }
+
+            int messageDiff = list.Messages.Count - messages.Count;
+            //If too many delete
+            for (int i=0; i < messageDiff; i++)
+            {
+                ulong targetMessageID = list.MessageIDs.Last();
+                IUserMessage targetMessage = list.Messages[targetMessageID];
+                await targetMessage.DeleteAsync();
+                list.Messages.Remove(targetMessageID);
+                list.MessageIDs.Remove(targetMessageID);
+            }
+
+            //Modify the rest existing
+            for (int i=0; i < list.MessageIDs.Count; i++)
+            {
+                ulong id = list.MessageIDs[i];
+                IUserMessage targetMessage = list.Messages[id];
+                ToDoListMessage newMessage = messages[i];
+                await targetMessage.ModifyAsync(x => x.Embeds = new(newMessage.embeds.ToArray()));
+            }
+
+            //If not enough create
+            if (messageDiff < 0)
+            {
+                for (int i=1; i < -messageDiff+1; i++)
+                {
+                    ToDoListMessage message = messages[-i];
+                    IUserMessage newMessage = await list.ListChannel.SendMessageAsync(embeds: message.embeds.ToArray());
+                    list.Messages.Add(newMessage.Id, newMessage);
+                    list.MessageIDs.Add(newMessage.Id);
+                }
+            }
+
+            await _guildService.SaveGuild(guildID);
 
 
             //List<Embed> listEmbeds = await CreateToDoEmbed(list);
@@ -315,7 +368,7 @@ namespace InnoTasker.Services.ToDo
 
             await _guildService.SaveGuild(guildID);
 
-            if (updateMessage) await UpdateToDoListMessage(list);
+            if (updateMessage) await UpdateToDoListMessage(guildID, list);
 
             if (await _toDoForumService.IsListForumEnabled(list) && item.ItemUpdateQueue.Count > 0 )
             {
@@ -413,7 +466,7 @@ namespace InnoTasker.Services.ToDo
                 await _logger.LogAsync(LogSeverity.Debug, this, $"Item removed from list {guildID}/{list.Name}/({item.ID}){item.Name}");
                 await _guildService.SaveGuild(guildID);
 
-                await UpdateToDoListMessage(list);
+                await UpdateToDoListMessage(guildID, list);
             }
         }
 

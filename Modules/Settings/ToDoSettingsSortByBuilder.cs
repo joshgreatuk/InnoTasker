@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
 using InnoTasker.Data;
 using InnoTasker.Data.ToDo;
 using System;
@@ -13,7 +14,20 @@ namespace InnoTasker.Modules.Settings
     {
         public async Task<MessageContext> BuildPage(ToDoSettingsInstance instance)
         {
-            throw new NotImplementedException();
+            List<string> descriptionStrings = new()
+            {
+                $"Main Sort Type: {instance.mainSortBy.SortType} ({instance.mainSortBy.Direction})",
+                $"Sub Sort Type: {instance.subSortBy.SortType} ({instance.subSortBy.Direction})"
+            };
+
+            EmbedBuilder embed = new EmbedBuilder()
+                .WithTitle($"{instance.toDoListName} settings: Sorting")
+                .WithDescription(string.Join("\n", descriptionStrings))
+                .WithFooter("Use /admin sortby (SetMain/SetSub/ToggleDirection) to set sorting modes!");
+
+            ComponentBuilder components = new ComponentBuilder();
+
+            return new(embed.Build(), components);
         }
 
         public async Task<MessageContext?> HandleInteraction(ToDoSettingsInstance instance, SocketInteraction interaction)

@@ -15,7 +15,7 @@ namespace InnoTasker.Services.Interfaces.ToDo
         public Task UpdateToDoList(ulong guildID, ToDoList list, Dictionary<string, string> renamedCategories=null, Dictionary<string,string> renamedStages=null);
 
         public Task UpdateToDoListMessage(ulong guildID, string listName);
-        public Task UpdateToDoListMessage(ToDoList list);
+        public Task UpdateToDoListMessage(ulong guildID, ToDoList list);
 
         public Task UpdateToDoItem(ulong guildID, string listName, int itemID);
         public Task UpdateToDoItem(ulong guildID, ToDoList list, int itemID);

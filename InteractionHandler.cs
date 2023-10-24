@@ -61,6 +61,8 @@ namespace InnoTasker
 
         public async Task OnInteraction(SocketInteraction interaction)
         {
+            if (interaction.Type is not InteractionType.ApplicationCommand) return;
+
             if (userCooldowns.TryGetValue(interaction.User.Id, out DateTime cooldownTime))
             {
                 if (cooldownTime.Add(s_userCooldown) > DateTime.UtcNow)
