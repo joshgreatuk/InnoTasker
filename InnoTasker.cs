@@ -73,6 +73,7 @@ namespace InnoTasker
                 .AddSingleton(x => new AdminPostDatabase(x, $"{basePath}/Data/AdminPosts/"))
 
                 //Bot Services
+                .AddSingleton<IDiscordRequestService, DiscordRequestService>()
                 .AddSingleton<IGuildService, GuildService>()
                 .AddSingleton<IToDoListService, ToDoListService>()
                 .AddSingleton<IToDoForumService, ToDoForumService>()
@@ -131,7 +132,8 @@ namespace InnoTasker
                 TryTask(_services.GetRequiredService<IToDoSettingsService>().Shutdown()),
                 TryTask(_services.GetRequiredService<IToDoListService>().Shutdown()),
                 TryTask(_services.GetRequiredService<IToDoForumService>().Shutdown()),
-                TryTask(_services.GetRequiredService<IAdminService>().Shutdown())
+                TryTask(_services.GetRequiredService<IAdminService>().Shutdown()),
+                TryTask(_services.GetRequiredService<IDiscordRequestService>().Shutdown())
             );
 
             //Save anything that needs saving, etc
