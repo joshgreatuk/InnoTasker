@@ -24,7 +24,7 @@ namespace InnoTasker
             return program.MainAsync();
         }
 
-        private static readonly string s_debugBotToken = "MTE0NTc1NjIwMDEzMTEwNDgyOQ.GzHfFV.VtddJE75PqW5FH6sWuNb373wZ04RPH510BefSI";
+        private static readonly string s_debugBotToken = "";
         private static readonly string s_releaseBotToken = "";
 
         private readonly IServiceProvider _services;
